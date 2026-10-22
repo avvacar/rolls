@@ -448,8 +448,8 @@ async function orderLabelHtml(o){
   const bc = await barcodeSvg(o.order), rbc = await barcodeSvg(o.roll.carton_no), qr = qrBrand(VURL(o.roll.token));
   const sp = ROLL_SPECS[o.roll.product_code] || { type: o.roll.film || "PPF" };
   const specs = [sp.material, sp.glue, sp.thickness, sp.size].filter(Boolean).map(esc).join(" · ");
-  return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>ملصق طلب ${esc(o.order)}</title><style>
-@page{size:100mm 150mm;margin:0}*{box-sizing:border-box}body{margin:0;font-family:Tahoma,"Segoe UI",Arial,sans-serif;color:#000;background:#fff}
+  return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>ملصق طلب ${esc(o.order)}</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&display=swap"><style>
+@page{size:100mm 150mm;margin:0}*{box-sizing:border-box}body{margin:0;font-family:"Cairo",Tahoma,"Segoe UI",Arial,sans-serif;color:#000;background:#fff}
 .lab{width:100mm;height:150mm;padding:4mm;display:flex;flex-direction:column;overflow:hidden}
 .box{position:relative;border:.7mm solid #000;border-radius:3.5mm;display:flex;flex-direction:column;align-items:center;overflow:hidden}
 .box>*{position:relative}.wm{position:absolute!important;inset:0;display:flex;align-items:center;justify-content:center;opacity:.06;pointer-events:none}.wm svg{width:70mm;height:80mm}
@@ -476,7 +476,7 @@ async function orderLabelHtml(o){
 
 .p2{flex:1;padding:2.6mm 4mm 2.6mm;justify-content:space-between}
 .hd{display:flex;flex-direction:column;align-items:center;gap:.5mm}
-.ty{display:flex;align-items:baseline;gap:2mm;direction:ltr}.ty b{font-size:5.6mm;font-weight:800;line-height:1}.ty span{font-size:3.2mm;font-weight:700;direction:rtl}
+.ty{display:flex;align-items:baseline;gap:2mm;direction:rtl}.ty b{font-size:5.6mm;font-weight:800;line-height:1;direction:ltr;unicode-bidi:isolate}.ty span{font-size:3.2mm;font-weight:700;letter-spacing:0;white-space:nowrap}
 .sp{font-size:2.6mm;font-weight:700;letter-spacing:.2mm;direction:ltr;text-align:center}
 .rn2{font-family:Consolas,monospace;font-size:5mm;font-weight:700;direction:ltr;white-space:nowrap;line-height:1}
 .bcw{display:flex;flex-direction:column;align-items:center}.rbc svg{width:84mm;height:9mm;display:block}
@@ -500,7 +500,7 @@ async function orderLabelHtml(o){
 <div class="box p2"><div class="wm">${AVVA_WM}</div>
   <div class="hd"><div class="lb">A<b>VV</b>A CAR</div><div class="tg">SMART PPF PROTECTION</div></div>
   <div class="ob"><div class="kv"><span class="cu2">${esc(o.customer || "—")}${o.city?" · "+esc(o.city):""}</span><span class="no2"><i>رقم الطلب</i>${esc(o.order)}</span></div><div class="bc2">${bc}</div></div>
-  <div class="ty"><b>${esc(sp.type)}</b>${sp.ar?`<span>${esc(sp.ar)}</span>`:""}</div>
+  <div class="ty">${sp.ar?`<span dir="rtl" lang="ar">${esc(sp.ar)}</span>`:""}<b dir="ltr">${esc(sp.type)}</b></div>
   ${specs?`<div class="sp">${specs}</div>`:""}
   <div class="rn2">${esc(o.roll.carton_no)}</div>
   <div class="bcw"><div class="rbc">${rbc}</div>${MICRO(4)}<div class="code">رقم الرول المعتمد لتفعيل ضمانك</div></div>
@@ -578,15 +578,15 @@ async function labelsHtml(rows, ph){
     const cell = (k, v) => v ? `<div class="sc"><span>${k}</span><b>${esc(v)}</b></div>` : "";
     return `<div class="lab"><div class="top"><div class="wm">${AVVA_WM}</div>
 <div class="hd"><div class="lb">A<b>VV</b>A CAR</div><div class="tg">SMART PPF PROTECTION</div></div>
-<div class="ty"><b>${esc(sp.type)}</b>${sp.ar ? `<span>${esc(sp.ar)}</span>` : ""}</div>
+<div class="ty">${sp.ar ? `<span dir="rtl" lang="ar">${esc(sp.ar)}</span>` : ""}<b dir="ltr">${esc(sp.type)}</b></div>
 <div class="specs">${cell("MATERIAL", sp.material)}${cell("GLUE", sp.glue)}${cell("THICKNESS", sp.thickness)}</div>
 ${sp.size ? `<div class="sz">${esc(sp.size)}</div>` : ""}
 <div class="seq num"${ph?' id="phNum"':""}>${ph?"&nbsp;":esc(r.carton_no)}</div>
 <div class="bcw"><div class="rbc">${bcs[r.carton_no]}</div>${MICRO(4)}<div class="code">رقم الرول المعتمد لتفعيل ضمانك</div></div>
 <div class="qa"><div class="qr">${ph?`<div class="qrb" id="phQr"><div class="qrm" id="phLogo">${AVVA_MARK}</div></div>`:qrBrand(u)}</div><div class="qt"><div class="act">فعّل ضمانك من هنا</div><div class="trust">رول أصلي موثّق ومشمول بضمان <span class="nb">A<b>VV</b>A CAR</span> الرسمي</div><div class="cap">ما فتح معك الرمز؟ ادخل مباشرة على موقع الضمان<b>warranty.avvacar.com</b></div></div></div>
 </div></div>`; };
-  return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>ملصقات رولات AVVA</title><style>
-@page{size:100mm 150mm;margin:0}*{box-sizing:border-box}body{margin:0;font-family:Tahoma,"Segoe UI",Arial,sans-serif;color:#000;background:#fff}
+  return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>ملصقات رولات AVVA</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&display=swap"><style>
+@page{size:100mm 150mm;margin:0}*{box-sizing:border-box}body{margin:0;font-family:"Cairo",Tahoma,"Segoe UI",Arial,sans-serif;color:#000;background:#fff}
 .hint{font:14px Tahoma;padding:10px;background:#e3f6fa}@media print{.hint{display:none}}
 .lab{width:100mm;height:150mm;padding:4mm;display:flex;page-break-after:always;overflow:hidden}
 .top{position:relative;border:.7mm solid #000;border-radius:3.5mm;padding:4mm 4mm 3.5mm;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:space-between}
@@ -594,7 +594,7 @@ ${sp.size ? `<div class="sz">${esc(sp.size)}</div>` : ""}
 .hd{display:flex;flex-direction:column;align-items:center;gap:.6mm}
 .lb{font-weight:700;letter-spacing:1.6mm;font-size:7mm;direction:ltr;white-space:nowrap;line-height:1}.lb b{color:#00b5d9}
 .tg{font-size:2.3mm;letter-spacing:.9mm;direction:ltr;color:#333}
-.ty{display:flex;align-items:baseline;gap:2.5mm;direction:ltr}.ty b{font-size:8.6mm;font-weight:800;letter-spacing:.2mm;line-height:1}.ty span{font-size:3.6mm;font-weight:700;direction:rtl}
+.ty{display:flex;align-items:baseline;gap:2.5mm;direction:rtl}.ty b{font-size:8.6mm;font-weight:800;line-height:1;direction:ltr;unicode-bidi:isolate}.ty span{font-size:3.6mm;font-weight:700;letter-spacing:0;white-space:nowrap}
 .specs{display:flex;width:100%;border:.35mm solid #000;border-radius:1.6mm;direction:ltr}
 .sc{flex:1;display:flex;flex-direction:column;align-items:center;padding:1.2mm 0;gap:.4mm}.sc+.sc{border-left:.35mm solid #000}
 .sc span{font-size:2.3mm;letter-spacing:.35mm;color:#333}.sc b{font-size:3.5mm;font-weight:800}
@@ -624,6 +624,7 @@ async function htmlToPdf(srcHtml, n, filename, msgSel, btnSel){
     const fr = document.createElement("iframe"); fr.style.cssText="position:fixed;left:-10000px;top:0;width:420px;height:640px;border:0"; document.body.appendChild(fr);
     await new Promise(r=>{ fr.onload=r; fr.srcdoc=html; });
     for (let i=0;i<50 && !fr.contentWindow.html2canvas;i++) await new Promise(r=>setTimeout(r,100));
+    try { await Promise.race([fr.contentDocument.fonts.ready, new Promise(r=>setTimeout(r,3000))]); } catch(e){}
     if (!fr.contentWindow.html2canvas) throw new Error("تعذر تحميل مكتبة PDF، تأكد من الإنترنت.");
     const pdf = new jspdf.jsPDF({ unit:"mm", format:[100,150], orientation:"portrait" });
     const labs = fr.contentDocument.querySelectorAll(".lab");
@@ -659,6 +660,7 @@ async function fastLabelsPdf(rows){
       const fr = document.createElement("iframe"); fr.style.cssText="position:fixed;left:-10000px;top:0;width:420px;height:640px;border:0"; document.body.appendChild(fr);
       await new Promise(r=>{ fr.onload=r; fr.srcdoc=html; });
       for (let i=0;i<60 && !fr.contentWindow.html2canvas;i++) await new Promise(r=>setTimeout(r,100));
+      try { await Promise.race([fr.contentDocument.fonts.ready, new Promise(r=>setTimeout(r,3000))]); } catch(e){}
       if (!fr.contentWindow.html2canvas) throw new Error("تعذر تحميل مكتبة PDF، تأكد من الإنترنت.");
       const d = fr.contentDocument, lab = d.querySelector(".lab"), L = lab.getBoundingClientRect(), mm = 100 / L.width;
       const box = id => { const b = d.getElementById(id).getBoundingClientRect(); return { x:(b.left-L.left)*mm, y:(b.top-L.top)*mm, w:b.width*mm, h:b.height*mm }; };
