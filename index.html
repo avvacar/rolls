@@ -130,6 +130,15 @@ dialog .card{margin:0}
     <button class="btn w" id="addBtn">تأكيد وحفظ</button>
     <div class="msg" id="addMsg"></div>
   </div>
+  <div class="card">
+    <h2>كراتين بدون ملصق</h2>
+    <p style="color:var(--mut);margin:0 0 8px;font-size:14px">اكتب عدد الكراتين اللي ما عليها ملصق المصنع. النظام يعطي كل واحد رقم خاص ويضيفها للمخزون، وتطلع ملصقاتها في تبويب الطباعة.</p>
+    <div class="row">
+      <input id="blankN" class="ltr" inputmode="numeric" placeholder="10" style="flex:1">
+      <button class="btn" id="blankBtn" style="flex:2">إضافة وتجهيز الملصقات</button>
+    </div>
+    <div class="msg" id="blankMsg"></div>
+  </div>
   <div class="card"><h2>آخر الإدخالات</h2><div class="recent" id="recent"><span style="color:var(--mut)">لا يوجد بعد</span></div></div>
 </section>
 
@@ -328,6 +337,20 @@ $("#addBtn").onclick = async () => {
   if (streams["camIn"]) $("#camIn").scrollIntoView({behavior:"smooth",block:"center"}); else $("#seq").focus();
 };
 
+
+let BLANK_IDS = new Set();
+$("#blankBtn").onclick = async () => {
+  const n = parseInt(toLatin($("#blankN").value).replace(/\D/g,""),10);
+  if (!n || n<1 || n>300) { msg("#blankMsg","اكتب عدد من 1 إلى 300.","bad"); return; }
+  $("#blankBtn").disabled = true; const j = await api("add_blank", { count:n }); $("#blankBtn").disabled = false;
+  if (!j.ok) { msg("#blankMsg", j.message, "bad"); return; }
+  beep(true); SESS += j.rows.length; $("#sbSess").textContent = SESS; refreshBar();
+  BLANK_IDS = new Set(j.rows.map(r=>r.id));
+  msg("#blankMsg", `تم ✓ أضفت ${j.rows.length} رول (${j.rows[j.rows.length-1].code} إلى ${j.rows[0].code}). روح لتبويب الطباعة واطبع ملصقاتها.`, "ok");
+  $("#blankN").value = "";
+};
+const seqOf = r => r.seq || r.code;
+const cartonOf = r => String(r.carton_no||"").startsWith("NL-") ? "بدون ملصق مصنع" : r.carton_no;
 /* ---------- صرف ---------- */
 async function showRoll(key){
   if (!key) return; const j = await api("get", { roll:key });
@@ -357,7 +380,7 @@ async function loadStock(){
   if (s.ok) { const c=s.counts;
     $("#stats").innerHTML = `<div class="stat main"><b>${c.in_stock}</b><span>في المستودع</span></div><div class="stat"><b>${c.assigned}</b><span>مصروف</span></div><div class="stat"><b>${c.installed}</b><span>مركّب</span></div><div class="stat"><b>${c.returned}</b><span>مرتجع</span></div><div class="stat"><b>${c.damaged}</b><span>تالف</span></div><div class="stat"><b>${s.unprinted}</b><span>بدون ملصق مطبوع</span></div>`; }
   const j = await api("list", { q: $("#q").value, status: $("#fst").value });
-  $("#list").innerHTML = (j.rows||[]).map(r => `<tr><td><b class="mono">${esc(r.code)}</b><br><small class="mono" style="color:var(--mut)">${esc(r.carton_no)}</small></td><td><span class="pill p-${r.status}">${ST[r.status]}</span></td><td class="mono">${r.order_ref||""}</td><td><button class="btn sec" data-id="${esc(r.code)}" style="padding:6px 10px">إدارة</button></td></tr>`).join("") || `<tr><td colspan="4" style="color:var(--mut)">لا يوجد</td></tr>`;
+  $("#list").innerHTML = (j.rows||[]).map(r => `<tr><td><b class="mono">${esc(r.code)}</b><br><small class="mono" style="color:var(--mut)">${esc(cartonOf(r))}</small></td><td><span class="pill p-${r.status}">${ST[r.status]}</span></td><td class="mono">${r.order_ref||""}</td><td><button class="btn sec" data-id="${esc(r.code)}" style="padding:6px 10px">إدارة</button></td></tr>`).join("") || `<tr><td colspan="4" style="color:var(--mut)">لا يوجد</td></tr>`;
   $("#list").querySelectorAll("button").forEach(b => b.onclick = () => manage(b.dataset.id));
 }
 $("#q").oninput = () => { clearTimeout(qT); qT = setTimeout(loadStock, 350); };
@@ -389,7 +412,7 @@ let PROWS = [];
 async function loadPrint(){
   const j = await api("list", { unprinted: !$("#showAll").checked, limit: 1000 });
   PROWS = (j.rows||[]).sort((a,b)=>a.carton_no.localeCompare(b.carton_no));
-  $("#plist").innerHTML = PROWS.map((r,i)=>`<tr><td><input type="checkbox" class="pc" data-i="${i}" ${r.printed_at?"":"checked"} style="width:auto"></td><td class="mono"><b>${esc(r.seq||"")}</b> <small style="color:var(--mut)">${esc(r.carton_no)}</small></td><td class="mono">${esc(r.code)}</td><td>${r.printed_at?"✓":""}</td></tr>`).join("") || `<tr><td colspan="4" style="color:var(--mut)">كل الملصقات مطبوعة 👍</td></tr>`;
+  $("#plist").innerHTML = PROWS.map((r,i)=>`<tr><td><input type="checkbox" class="pc" data-i="${i}" ${r.printed_at?"":"checked"} style="width:auto"></td><td class="mono"><b>${esc(r.seq||"")}</b> <small style="color:var(--mut)">${esc(cartonOf(r))}</small></td><td class="mono">${esc(r.code)}</td><td>${r.printed_at?"✓":""}</td></tr>`).join("") || `<tr><td colspan="4" style="color:var(--mut)">كل الملصقات مطبوعة 👍</td></tr>`;
 }
 $("#showAll").onchange = loadPrint;
 $("#selAll").onchange = e => document.querySelectorAll(".pc").forEach(c => c.checked = e.target.checked);
@@ -406,7 +429,7 @@ function printLabels0(rows){
   msg("#printMsg","انفتحت صفحة الملصقات في تبويب جديد مع أمر الطباعة. بعد ما تطبع ارجع هنا واضغط \"تعليم المحدد كمطبوع\".","ok");
 }
 function labelsHtml(rows){
-  const lab = r => { const u = `${r.qr_url}`; return `<div class="lab"><div class="top"><div class="lb">A<b>VV</b>A CAR</div><div class="seq">${esc(r.seq)}</div><div class="qr">${qrSvg(u)}</div><div class="code">رقم الرول للضمان: <span>${esc(r.code)}</span></div><div class="full">${esc(r.carton_no)}</div><div class="cap">امسح الرمز أو اكتب رقم الرول في صفحة الضمان · warranty.avvacar.com</div></div><div class="cut"><span>✂ قص والصق داخل الكور</span></div><div class="core"><div class="qr">${qrSvg(u)}</div><div class="t"><div class="lb sm">A<b>VV</b>A CAR</div><div class="c2">${esc(r.code)}</div><div class="cap">رقم الرول للضمان · ${esc(r.seq)}</div></div></div></div>`; };
+  const lab = r => { const u = `${r.qr_url}`; return `<div class="lab"><div class="top"><div class="lb">A<b>VV</b>A CAR</div><div class="seq">${esc(seqOf(r))}</div><div class="qr">${qrSvg(u)}</div><div class="code">رقم الرول للضمان: <span>${esc(r.code)}</span></div><div class="full">${esc(cartonOf(r))}</div><div class="cap">امسح الرمز أو اكتب رقم الرول في صفحة الضمان · warranty.avvacar.com</div></div><div class="cut"><span>✂ قص والصق داخل الكور</span></div><div class="core"><div class="qr">${qrSvg(u)}</div><div class="t"><div class="lb sm">A<b>VV</b>A CAR</div><div class="c2">${esc(r.code)}</div><div class="cap">رقم الرول للضمان</div></div></div></div>`; };
   return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>ملصقات رولات AVVA</title><style>
 @page{size:100mm 150mm;margin:0}*{box-sizing:border-box}body{margin:0;font-family:Tahoma,"Segoe UI",Arial,sans-serif;color:#000;background:#fff}
 .hint{font:14px Tahoma;padding:10px;background:#e3f6fa}@media print{.hint{display:none}}
