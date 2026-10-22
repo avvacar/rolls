@@ -106,7 +106,7 @@ dialog .card{margin:0}
 <section id="t-in">
   <div class="card">
     <h2>إدخال رول للمستودع</h2>
-    <div class="cam" id="camIn"><video playsinline muted></video><div class="guide"></div><div class="hint">خلّ سطر ROLL NO داخل الإطار</div></div>
+    <div class="cam" id="camIn"><video playsinline muted></video><div class="guide"></div><div class="hint">خلّ سطر ROLL NO داخل الإطار واضغط التقط، والحفظ تلقائي</div></div>
     <div class="row" style="margin-top:10px">
       <button class="btn" id="ocrStart">📷 صوّر رقم الرول</button>
       <button class="btn sec hide" id="ocrShot">التقط</button>
@@ -127,7 +127,7 @@ dialog .card{margin:0}
     </div>
     <div class="cam" id="camInner" style="margin-top:8px"><video playsinline muted></video><div class="hint">وجّه الكاميرا على باركود اللفة</div></div>
     <div style="height:12px"></div>
-    <button class="btn w" id="addBtn">تأكيد وحفظ</button>
+    <button class="btn w" id="addBtn">حفظ (للإدخال اليدوي)</button>
     <div class="msg" id="addMsg"></div>
   </div>
   <div class="card">
@@ -318,16 +318,18 @@ $("#ocrShot").onclick = async () => {
     const w = await getTess(); const { data } = await w.recognize(c);
     const p = parseCarton(data.text);
     if (p) { $("#carton").value = p.full; $("#prefix").value = p.prefix; $("#seq").value = p.seq; beep(true);
-      msg("#ocrMsg", "قريت: " + p.full + " — تأكد منه واضغط تأكيد وحفظ", "ok"); $("#addBtn").scrollIntoView({behavior:"smooth",block:"center"}); }
+      msg("#ocrMsg", "قريت: " + p.full + " — جاري الحفظ...", "ok"); await saveRoll(); msg("#ocrMsg","صوّر الكرتون اللي بعده 📷","ok"); }
     else { beep(false); msg("#ocrMsg","ما قدرت أقرا الرقم. قرّب الكاميرا وخلّ سطر ROLL NO كامل داخل الإطار، أو اكتب آخر الأرقام يدوي.","bad"); }
   } catch(e){ msg("#ocrMsg","قارئ الأرقام ما اشتغل، اكتب الرقم يدوي.","bad"); }
   $("#ocrShot").disabled = false;
 };
 $("#seq").oninput = () => { const pf=$("#prefix").value.trim(), s=toLatin($("#seq").value).replace(/\D/g,""); if (pf && s) { const p=parseCarton(pf+"-"+s); if (p) $("#carton").value = p.full; } };
+$("#seq").onkeydown = e => { if (e.key==="Enter") { e.preventDefault(); saveRoll(); } };
 $("#innerScan").onclick = () => scanInto("#camInner", code => { $("#inner").value = code; });
 
 const recent = [];
-$("#addBtn").onclick = async () => {
+$("#addBtn").onclick = () => saveRoll();
+async function saveRoll(){
   const p = parseCarton($("#carton").value);
   if (!p) { beep(false); msg("#addMsg","رقم الرول غير مكتمل. لازم يكون مثل AVVA-5201.01092026-129","bad"); return; }
   $("#addBtn").disabled = true;
@@ -340,7 +342,7 @@ $("#addBtn").onclick = async () => {
     recent.unshift(j.roll); SESS++; $("#sbSess").textContent = SESS; refreshBar(); $("#recent").innerHTML = recent.slice(0,15).map(r=>`<div><span class="mono">${esc(r.carton_no)}</span><b class="mono">${esc(r.code)}</b></div>`).join(""); }
   $("#carton").value=""; $("#seq").value=""; $("#inner").value=""; msg("#ocrMsg","","");
   if (streams["camIn"]) $("#camIn").scrollIntoView({behavior:"smooth",block:"center"}); else $("#seq").focus();
-};
+}
 
 
 let BLANK_IDS = new Set();
