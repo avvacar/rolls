@@ -572,8 +572,8 @@ const AVVA_WM = `<svg viewBox="0 0 100 116" xmlns="http://www.w3.org/2000/svg"><
 function qrBrand(text){ const q=qrcode(0,"H"); q.addData(text); q.make(); return `<div class="qrb">${q.createSvgTag({cellSize:4,margin:1,scalable:true})}<div class="qrm">${AVVA_MARK}</div></div>`; }
 const MICRO = n => `<div class="micro">${Array(n*3).fill("AVVA CAR ◆ GENUINE ◆").join(" ")}</div>`;
 const ROLL_SPECS = { "5201": { type:"Gloss Clear", ar:"شفاف لامع", material:"LUBRIZOL", glue:"ASHLAND", thickness:"8.5 mil", size:"1.52M × 15M" } };
-async function labelsHtml(rows){
-  const bcs = {}; for (const r of rows) bcs[r.carton_no] = await barcodeSvg(r.carton_no);
+async function labelsHtml(rows, ph){
+  const bcs = {}; for (const r of rows) bcs[r.carton_no] = ph ? '<div id="phBc" style="width:84mm;height:13mm"></div>' : await barcodeSvg(r.carton_no);
   const lab = r => { const u = VURL(r.token); const sp = ROLL_SPECS[r.product_code] || { type: r.film || "PPF" };
     const cell = (k, v) => v ? `<div class="sc"><span>${k}</span><b>${esc(v)}</b></div>` : "";
     return `<div class="lab"><div class="top"><div class="wm">${AVVA_WM}</div>
@@ -581,9 +581,9 @@ async function labelsHtml(rows){
 <div class="ty"><b>${esc(sp.type)}</b>${sp.ar ? `<span>${esc(sp.ar)}</span>` : ""}</div>
 <div class="specs">${cell("MATERIAL", sp.material)}${cell("GLUE", sp.glue)}${cell("THICKNESS", sp.thickness)}</div>
 ${sp.size ? `<div class="sz">${esc(sp.size)}</div>` : ""}
-<div class="seq num">${esc(r.carton_no)}</div>
+<div class="seq num"${ph?' id="phNum"':""}>${ph?"&nbsp;":esc(r.carton_no)}</div>
 <div class="bcw"><div class="rbc">${bcs[r.carton_no]}</div>${MICRO(4)}<div class="code">رقم الرول المعتمد لتفعيل ضمانك</div></div>
-<div class="qa"><div class="qr">${qrBrand(u)}</div><div class="qt"><div class="act">فعّل ضمانك من هنا</div><div class="trust">رول أصلي موثّق ومشمول بضمان <span class="nb">A<b>VV</b>A CAR</span> الرسمي</div><div class="cap">ما فتح معك الرمز؟ ادخل مباشرة على موقع الضمان<b>warranty.avvacar.com</b></div></div></div>
+<div class="qa"><div class="qr">${ph?`<div class="qrb" id="phQr"><div class="qrm" id="phLogo">${AVVA_MARK}</div></div>`:qrBrand(u)}</div><div class="qt"><div class="act">فعّل ضمانك من هنا</div><div class="trust">رول أصلي موثّق ومشمول بضمان <span class="nb">A<b>VV</b>A CAR</span> الرسمي</div><div class="cap">ما فتح معك الرمز؟ ادخل مباشرة على موقع الضمان<b>warranty.avvacar.com</b></div></div></div>
 </div></div>`; };
   return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>ملصقات رولات AVVA</title><style>
 @page{size:100mm 150mm;margin:0}*{box-sizing:border-box}body{margin:0;font-family:Tahoma,"Segoe UI",Arial,sans-serif;color:#000;background:#fff}
@@ -642,7 +642,60 @@ async function saveLabelsPdf(rows){
   if (!rows.length) { msg("#printMsg","حدد ملصق واحد على الأقل من القائمة تحت (حط عليه صح ✓).","bad"); return; }
   await htmlToPdf(await labelsHtml(rows), rows.length, "AVVA-labels-"+new Date().toISOString().slice(0,10)+"-"+rows.length+".pdf", "#printMsg", "#pdfBtn");
 }
-$("#pdfBtn").onclick = () => saveLabelsPdf(selected());
+
+// Fast PDF: the shared design is rendered once per product as one image (embedded once),
+// then each roll's number, Code128 bars and QR modules are drawn as vectors on top.
+async function fastLabelsPdf(rows){
+  if (!rows.length) { msg("#printMsg","حدد ملصق واحد على الأقل من القائمة تحت (حط عليه صح ✓).","bad"); return; }
+  $("#pdfBtn").disabled = true;
+  try {
+    msg("#printMsg","جاري تجهيز ملف PDF...","warn");
+    await Promise.all([loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"), loadScript("https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js")]);
+    const H2C = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+    const groups = {}; rows.forEach(r => (groups[r.product_code || "_"] = groups[r.product_code || "_"] || []).push(r));
+    const tpl = {};
+    for (const key of Object.keys(groups)) {
+      const html = (await labelsHtml([groups[key][0]], true)).replace(/<script>setTimeout\(\(\)=>print\(\),400\)<\/script>/,"").replace('<div class="hint">','<div class="hint" style="display:none">').replace("</head>",'<script src="'+H2C+'"><\/script></head>');
+      const fr = document.createElement("iframe"); fr.style.cssText="position:fixed;left:-10000px;top:0;width:420px;height:640px;border:0"; document.body.appendChild(fr);
+      await new Promise(r=>{ fr.onload=r; fr.srcdoc=html; });
+      for (let i=0;i<60 && !fr.contentWindow.html2canvas;i++) await new Promise(r=>setTimeout(r,100));
+      if (!fr.contentWindow.html2canvas) throw new Error("تعذر تحميل مكتبة PDF، تأكد من الإنترنت.");
+      const d = fr.contentDocument, lab = d.querySelector(".lab"), L = lab.getBoundingClientRect(), mm = 100 / L.width;
+      const box = id => { const b = d.getElementById(id).getBoundingClientRect(); return { x:(b.left-L.left)*mm, y:(b.top-L.top)*mm, w:b.width*mm, h:b.height*mm }; };
+      const c = await fr.contentWindow.html2canvas(lab, { scale: 3, backgroundColor: "#ffffff" });
+      tpl[key] = { img: c.toDataURL("image/jpeg", 0.92), num: box("phNum"), bc: box("phBc"), qr: box("phQr"), logo: box("phLogo") };
+      fr.remove();
+    }
+    const pdf = new jspdf.jsPDF({ unit:"mm", format:[100,150], orientation:"portrait", compress:true });
+    rows.forEach((r, i) => {
+      const T = tpl[r.product_code || "_"];
+      if (i) pdf.addPage([100,150], "portrait");
+      pdf.addImage(T.img, "JPEG", 0, 0, 100, 150, "tpl_" + (r.product_code || "_"), "FAST");
+      pdf.setFillColor(0,0,0);
+      // roll number
+      pdf.setFont("courier", "bold"); let fs = 22; pdf.setFontSize(fs);
+      while (pdf.getTextWidth(r.carton_no) > 84 && fs > 8) { fs -= 0.5; pdf.setFontSize(fs); }
+      pdf.text(r.carton_no, 50, T.num.y + T.num.h/2, { align:"center", baseline:"middle" });
+      // Code128 bars
+      const enc = {}; JsBarcode(enc, r.carton_no, { format:"CODE128", displayValue:false, margin:0 });
+      const bits = enc.encodings.map(e => e.data).join(""), mw = T.bc.w / bits.length;
+      for (let k=0; k<bits.length; ) { if (bits[k] === "1") { let n=1; while (bits[k+n] === "1") n++; pdf.rect(T.bc.x + k*mw, T.bc.y, n*mw, T.bc.h, "F"); k += n; } else k++; }
+      // QR modules (logo area left clear)
+      const q = qrcode(0, "H"); q.addData(VURL(r.token)); q.make();
+      const n = q.getModuleCount(), cell = T.qr.w / (n + 2), lg = T.logo;
+      for (let y=0; y<n; y++) for (let x=0; x<n; x++) {
+        if (!q.isDark(y, x)) continue;
+        const px = T.qr.x + (x+1)*cell, py = T.qr.y + (y+1)*cell;
+        if (px + cell > lg.x - 0.4 && px < lg.x + lg.w + 0.4 && py + cell > lg.y - 0.4 && py < lg.y + lg.h + 0.4) continue;
+        pdf.rect(px, py, cell + 0.02, cell + 0.02, "F");
+      }
+    });
+    pdf.save("AVVA-labels-" + new Date().toISOString().slice(0,10) + "-" + rows.length + ".pdf");
+    msg("#printMsg","تم ✓ نزل ملف PDF فيه " + rows.length + " ملصق. افتحه واطبعه على طابعة 10×15 بمقياس 100%. وبعد الطباعة اضغط \"تعليم المحدد كمطبوع\".","ok");
+  } catch(e){ msg("#printMsg", e.message || "تعذر إنشاء PDF.", "bad"); }
+  $("#pdfBtn").disabled = false;
+}
+$("#pdfBtn").onclick = () => fastLabelsPdf(selected());
 
 $("#markBtn").onclick = async () => { const ids = selected().map(r=>r.id); if (!ids.length) return; const j = await api("mark_printed", { ids }); msg("#printMsg", j.ok ? `تم تعليم ${j.count} ملصق كمطبوع.` : j.message, j.ok?"ok":"bad"); loadPrint(); };
 </script>
