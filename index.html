@@ -337,7 +337,8 @@ async function scanLoop(){
           if (p.full === lastRead) readCount++; else { lastRead = p.full; readCount = 1; }
           hint("قريت " + p.seq + " …");
           const recentSame = p.full === lastSaved && Date.now()-lastSavedAt < 8000;
-          if (readCount >= 2 && !recentSame) {
+          const knownPf = store.get("avva_rolls_prefix"); const need = (!knownPf || knownPf === p.prefix) ? 1 : 2;
+          if (readCount >= need && !recentSame) {
             lastSaved = p.full; lastSavedAt = Date.now();
             $("#carton").value = p.full; $("#prefix").value = p.prefix; $("#seq").value = p.seq;
             await saveRoll(); hint("✓ " + p.seq + " — حرّك الكاميرا على الكرتون اللي بعده");
