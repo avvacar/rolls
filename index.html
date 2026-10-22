@@ -450,40 +450,56 @@ async function orderLabelHtml(o){
   const specs = [sp.material, sp.glue, sp.thickness, sp.size].filter(Boolean).map(esc).join(" · ");
   return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>ملصق طلب ${esc(o.order)}</title><style>
 @page{size:100mm 150mm;margin:0}*{box-sizing:border-box}body{margin:0;font-family:Tahoma,"Segoe UI",Arial,sans-serif;color:#000;background:#fff}
-.lab{width:100mm;height:150mm;padding:4mm;display:flex;overflow:hidden}
-.top{position:relative;border:.7mm solid #000;border-radius:3.5mm;padding:4mm 4mm 3.5mm;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:space-between}
-.top>*{position:relative}.wm{position:absolute!important;inset:0;display:flex;align-items:center;justify-content:center;opacity:.06;pointer-events:none}.wm svg{width:80mm;height:92mm}
-.hd{display:flex;flex-direction:column;align-items:center;gap:.6mm}
-.lb{font-weight:700;letter-spacing:1.6mm;font-size:6.6mm;direction:ltr;white-space:nowrap;line-height:1}.lb b{color:#00b5d9}
-.tg{font-size:2.3mm;letter-spacing:.9mm;direction:ltr;color:#333}
-.k{font-size:3mm;color:#333}
-.ord{display:flex;flex-direction:column;align-items:center;gap:1mm;width:100%}
-.ord .no{font-family:Consolas,monospace;font-size:10.5mm;font-weight:700;direction:ltr;line-height:1}
-.ord .bc svg{width:76mm;height:14mm;display:block}
-.cu{font-size:4.2mm;font-weight:800;text-align:center}
-.div{width:100%;display:flex;align-items:center;gap:2mm;font-size:2.4mm;letter-spacing:.6mm;color:#333;direction:ltr}.div::before,.div::after{content:"";flex:1;border-top:.35mm dashed #000}
-.ty{display:flex;align-items:baseline;gap:2mm;direction:ltr}.ty b{font-size:5.6mm;font-weight:800;line-height:1}.ty span{font-size:3mm;font-weight:700;direction:rtl}
+.lab{width:100mm;height:150mm;padding:4mm;display:flex;flex-direction:column;overflow:hidden}
+.box{position:relative;border:.7mm solid #000;border-radius:3.5mm;display:flex;flex-direction:column;align-items:center;overflow:hidden}
+.box>*{position:relative}.wm{position:absolute!important;inset:0;display:flex;align-items:center;justify-content:center;opacity:.06;pointer-events:none}.wm svg{width:70mm;height:80mm}
+.lb{font-weight:700;letter-spacing:1.5mm;font-size:6mm;direction:ltr;white-space:nowrap;line-height:1}.lb b{color:#00b5d9}
+.tg{font-size:2.2mm;letter-spacing:.9mm;direction:ltr;color:#333}
+.micro{width:84mm;overflow:hidden;white-space:nowrap;font-family:Consolas,monospace;font-size:1.2mm;line-height:1.5;letter-spacing:.12mm;text-align:center;direction:ltr}
+/* part 1: order + roll, cut and stick inside the roll */
+.p1{padding:2.4mm 3.5mm 2mm;gap:1.2mm}
+.p1 .r1{width:100%;display:flex;align-items:center;justify-content:space-between;gap:2mm}
+.p1 .lb{font-size:4.2mm;letter-spacing:1mm}
+.p1 .cu{font-size:4mm;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:56mm}
+.p1 .kv{width:100%;display:flex;align-items:center;justify-content:space-between;gap:2mm}
+.p1 .k{font-size:2.6mm;color:#333}
+.p1 .no{font-family:Consolas,monospace;font-size:5.2mm;font-weight:700;direction:ltr;line-height:1}
+.p1 .rn{font-family:Consolas,monospace;font-size:3.9mm;font-weight:700;direction:ltr;white-space:nowrap;line-height:1}
+.p1 .bc svg{width:84mm;height:7.5mm;display:block}
+.cut{width:100%;display:flex;align-items:center;gap:2mm;font-size:2.5mm;color:#333;margin:1.6mm 0}.cut::before,.cut::after{content:"";flex:1;border-top:.4mm dashed #000}
+/* part 2: stays on the carton */
+.p2{flex:1;padding:3mm 4mm 3mm;justify-content:space-between}
+.hd{display:flex;flex-direction:column;align-items:center;gap:.5mm}
+.ty{display:flex;align-items:baseline;gap:2mm;direction:ltr}.ty b{font-size:6.4mm;font-weight:800;line-height:1}.ty span{font-size:3.2mm;font-weight:700;direction:rtl}
 .sp{font-size:2.6mm;font-weight:700;letter-spacing:.2mm;direction:ltr;text-align:center}
-.rn{font-family:Consolas,monospace;font-size:5.6mm;font-weight:700;direction:ltr;white-space:nowrap;line-height:1}
-.bcw{display:flex;flex-direction:column;align-items:center}.rbc svg{width:84mm;height:11mm;display:block}
-.micro{width:84mm;overflow:hidden;white-space:nowrap;font-family:Consolas,monospace;font-size:1.25mm;line-height:1.5;letter-spacing:.12mm;text-align:center;direction:ltr}
+.rn2{font-family:Consolas,monospace;font-size:5.4mm;font-weight:700;direction:ltr;white-space:nowrap;line-height:1}
+.bcw{display:flex;flex-direction:column;align-items:center}.rbc svg{width:84mm;height:10mm;display:block}
+.code{margin-top:.6mm;font-size:3mm;font-weight:700}
 .qa{display:flex;align-items:center;gap:3mm;width:100%}
-.qrb{position:relative;width:24mm;height:24mm;flex:none}.qrb svg{width:24mm;height:24mm;display:block}
-.qrm{position:absolute;left:50%;top:50%;width:5.6mm;height:6.5mm;transform:translate(-50%,-50%)}.qr .qrm svg{width:100%;height:100%;display:block}
+.qrb{position:relative;width:23mm;height:23mm;flex:none}.qrb svg{width:23mm;height:23mm;display:block}
+.qrm{position:absolute;left:50%;top:50%;width:5.4mm;height:6.3mm;transform:translate(-50%,-50%)}.qr .qrm svg{width:100%;height:100%;display:block}
 .qt{flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:.8mm;text-align:right}
-.act{font-size:3.6mm;font-weight:800}.act::before{content:"▶ ";font-size:2.6mm;vertical-align:.3mm}
-.trust{font-size:2.8mm;font-weight:700;line-height:1.35}.trust b{color:#00b5d9}.trust .nb{white-space:nowrap}
-.cap{display:flex;flex-direction:column;gap:.2mm;font-size:2.4mm;line-height:1.35}.cap b{font-family:Consolas,monospace;font-size:2.9mm;direction:ltr;text-align:right}
-</style></head><body><div class="lab"><div class="top"><div class="wm">${AVVA_WM}</div>
-<div class="hd"><div class="lb">A<b>VV</b>A CAR</div><div class="tg">SMART PPF PROTECTION</div></div>
-<div class="ord"><div class="k">رقم الطلب · ORDER</div><div class="no">${esc(o.order)}</div><div class="bc">${bc}</div>${o.customer?`<div class="cu">${esc(o.customer)}${o.city?" · "+esc(o.city):""}</div>`:""}</div>
-<div class="div">ROLL</div>
-<div class="ty"><b>${esc(sp.type)}</b>${sp.ar?`<span>${esc(sp.ar)}</span>`:""}</div>
-${specs?`<div class="sp">${specs}</div>`:""}
-<div class="rn">${esc(o.roll.carton_no)}</div>
-<div class="bcw"><div class="rbc">${rbc}</div>${MICRO(4)}</div>
-<div class="qa"><div class="qr">${qr}</div><div class="qt"><div class="act">فعّل ضمانك من هنا</div><div class="trust">رول أصلي موثّق ومشمول بضمان <span class="nb">A<b>VV</b>A CAR</span> الرسمي</div><div class="cap">ما فتح معك الرمز؟ ادخل مباشرة على موقع الضمان<b>warranty.avvacar.com</b></div></div></div>
-</div></div><script>setTimeout(()=>print(),400)<\/script></body></html>`;
+.act{font-size:3.5mm;font-weight:800}.act::before{content:"▶ ";font-size:2.5mm;vertical-align:.3mm}
+.trust{font-size:2.7mm;font-weight:700;line-height:1.35}.trust b{color:#00b5d9}.trust .nb{white-space:nowrap}
+.cap{display:flex;flex-direction:column;gap:.2mm;font-size:2.3mm;line-height:1.35}.cap b{font-family:Consolas,monospace;font-size:2.8mm;direction:ltr;text-align:right}
+</style></head><body><div class="lab">
+<div class="box p1">
+  <div class="r1"><div class="cu">${esc(o.customer || "—")}${o.city?" · "+esc(o.city):""}</div><div class="lb">A<b>VV</b>A CAR</div></div>
+  <div class="kv"><span class="k">رقم الطلب</span><span class="no">${esc(o.order)}</span></div>
+  <div class="bc">${bc}</div>
+  <div class="kv"><span class="k">رقم الرول</span><span class="rn">${esc(o.roll.carton_no)}</span></div>
+  <div class="bc">${rbc}</div>
+</div>
+<div class="cut">✂ قص والصق داخل رول العميل</div>
+<div class="box p2"><div class="wm">${AVVA_WM}</div>
+  <div class="hd"><div class="lb">A<b>VV</b>A CAR</div><div class="tg">SMART PPF PROTECTION</div></div>
+  <div class="ty"><b>${esc(sp.type)}</b>${sp.ar?`<span>${esc(sp.ar)}</span>`:""}</div>
+  ${specs?`<div class="sp">${specs}</div>`:""}
+  <div class="rn2">${esc(o.roll.carton_no)}</div>
+  <div class="bcw"><div class="rbc">${rbc}</div>${MICRO(4)}<div class="code">رقم الرول المعتمد لتفعيل ضمانك</div></div>
+  <div class="qa"><div class="qr">${qr}</div><div class="qt"><div class="act">فعّل ضمانك من هنا</div><div class="trust">رول أصلي موثّق ومشمول بضمان <span class="nb">A<b>VV</b>A CAR</span> الرسمي</div><div class="cap">ما فتح معك الرمز؟ ادخل مباشرة على موقع الضمان<b>warranty.avvacar.com</b></div></div></div>
+</div>
+</div><script>setTimeout(()=>print(),400)<\/script></body></html>`;
 }
 $("#olPrint").onclick = async () => { if (!LAST_OUT) return; try { const h = await orderLabelHtml(LAST_OUT); const w = window.open("","_blank"); if (!w) { msg("#olMsg","المتصفح منع فتح صفحة الطباعة. اسمح بالنوافذ المنبثقة (Pop-ups).","bad"); return; } w.document.open(); w.document.write(h); w.document.close(); } catch(e){ msg("#olMsg", e.message||"تعذر تجهيز الملصق.","bad"); } };
 $("#olPdf").onclick = async () => { if (!LAST_OUT) return; try { const h = await orderLabelHtml(LAST_OUT); await htmlToPdf(h, 1, "AVVA-order-"+LAST_OUT.order+".pdf", "#olMsg", "#olPdf"); } catch(e){ msg("#olMsg", e.message||"تعذر تجهيز الملصق.","bad"); } };
