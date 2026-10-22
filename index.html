@@ -105,42 +105,35 @@ dialog .card{margin:0}
 
 <!-- ============ إدخال ============ -->
 <section id="t-in">
-  <div class="card">
-    <h2>إدخال رول للمستودع</h2>
-    <div class="cam" id="camIn"><video playsinline muted></video><div class="guide"></div><div class="hint" id="camHint" style="font-size:15px;font-weight:700">وجّه الكاميرا على ملصق الكرتون (الباركود وسطر ROLL NO)</div></div>
-    <div class="row" style="margin-top:10px">
-      <button class="btn" id="ocrStart">📷 ابدأ المسح</button>
-      <button class="btn sec hide" id="ocrShot">التقط</button>
-      <button class="btn sec hide" id="ocrStop">إغلاق الكاميرا</button>
-    </div>
+  <div class="card" style="padding:12px">
+    <div class="cam" id="camIn"><video playsinline muted></video><div class="guide"></div><div class="hint" id="camHint" style="font-size:15px;font-weight:700">وجّه الكاميرا على ملصق الكرتون</div></div>
+    <button class="btn w" id="ocrStart" style="font-size:20px;padding:18px">📷 ابدأ المسح</button>
+    <button class="btn sec w hide" id="ocrStop" style="margin-top:8px">إيقاف</button>
+    <button class="hide" id="ocrShot"></button>
     <div class="msg" id="ocrMsg"></div>
-    <label>رقم الرول</label>
-    <input id="carton" class="ltr" placeholder="AVVA-5201.01092026-129">
-    <label>أو اكتب آخر الأرقام بس (بداية الشحنة محفوظة)</label>
+    <div class="msg" id="addMsg"></div>
+  </div>
+  <details class="card">
+    <summary style="font-weight:700;cursor:pointer">كتابة الرقم يدوي</summary>
+    <label>آخر أرقام الرول</label>
     <div class="row">
       <input id="prefix" class="ltr" placeholder="AVVA-5201.01092026" style="flex:2">
       <input id="seq" class="ltr" inputmode="numeric" placeholder="129" style="flex:1">
     </div>
-    <label>باركود اللفة الداخلي (اختياري)</label>
-    <div class="row">
-      <input id="inner" class="ltr" placeholder="417596KXY20260824-6-1" style="flex:3">
-      <button class="btn sec" id="innerScan" style="flex:1">📷 سكان</button>
-    </div>
-    <div class="cam" id="camInner" style="margin-top:8px"><video playsinline muted></video><div class="hint">وجّه الكاميرا على باركود اللفة</div></div>
-    <div style="height:12px"></div>
-    <button class="btn w" id="addBtn">حفظ (للإدخال اليدوي)</button>
-    <div class="msg" id="addMsg"></div>
-  </div>
-  <div class="card">
-    <h2>كراتين بدون ملصق</h2>
-    <p style="color:var(--mut);margin:0 0 8px;font-size:14px">اكتب عدد الكراتين اللي ما عليها ملصق المصنع. النظام يعطي كل واحد رقم خاص ويضيفها للمخزون، وتطلع ملصقاتها في تبويب الطباعة.</p>
+    <input id="carton" type="hidden"><input id="inner" type="hidden">
+    <div style="height:10px"></div>
+    <button class="btn w" id="addBtn">حفظ</button>
+  </details>
+  <details class="card">
+    <summary style="font-weight:700;cursor:pointer">كراتين بدون ملصق</summary>
+    <label>كم كرتون؟</label>
     <div class="row">
       <input id="blankN" class="ltr" inputmode="numeric" placeholder="10" style="flex:1">
-      <button class="btn" id="blankBtn" style="flex:2">إضافة وتجهيز الملصقات</button>
+      <button class="btn" id="blankBtn" style="flex:2">إضافة</button>
     </div>
     <div class="msg" id="blankMsg"></div>
-  </div>
-  <div class="card"><h2>آخر الإدخالات</h2><div class="recent" id="recent"><span style="color:var(--mut)">لا يوجد بعد</span></div></div>
+  </details>
+  <div class="hide"><button id="innerScan"></button><div class="cam" id="camInner"><video playsinline muted></video></div><div id="recent"></div></div>
 </section>
 
 <!-- ============ صرف ============ -->
