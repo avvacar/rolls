@@ -158,6 +158,13 @@ dialog .card{margin:0}
     <div style="height:12px"></div>
     <button class="btn w" id="assignBtn">صرف الرول للطلب</button>
     <div class="msg" id="assignMsg"></div>
+    <div id="orderLabelBox" class="hide" style="margin-top:10px">
+      <div class="row">
+        <button class="btn" id="olPrint">🖨 طباعة ملصق الطلب</button>
+        <button class="btn sec" id="olPdf">⬇ ملصق الطلب PDF</button>
+      </div>
+      <div class="msg" id="olMsg"></div>
+    </div>
   </div>
 </section>
 
@@ -395,9 +402,36 @@ async function doAssign(force){
   if (!j.ok) { beep(false); msg("#assignMsg", j.message, "bad"); return; }
   beep(true); refreshBar();
   msg("#assignMsg", `تم الصرف ✓ ${j.roll.code} ← طلب ${j.roll.order_ref}${j.order ? " · "+j.order.customer_name+" ("+(j.order.city||"")+")" : ""}${j.rolls_on_order>1 ? " · عدد الرولات على هذا الطلب: "+j.rolls_on_order : ""}`, "ok");
+  LAST_OUT = { roll: j.roll, order: String(j.roll.order_ref), customer: j.order ? j.order.customer_name : "", city: j.order ? (j.order.city||"") : "" };
+  $("#orderLabelBox").classList.remove("hide");
   $("#outRoll").value=""; msg("#outRollInfo","","");
 }
 $("#assignBtn").onclick = () => doAssign(false);
+let LAST_OUT = null;
+async function barcodeSvg(val){
+  await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js");
+  const s = document.createElementNS("http://www.w3.org/2000/svg","svg");
+  JsBarcode(s, String(val), { format:"CODE128", displayValue:false, height:70, width:2.4, margin:0 });
+  return s.outerHTML;
+}
+async function orderLabelHtml(o){
+  const bc = await barcodeSvg(o.order), qr = qrSvg(o.roll.qr_url);
+  return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>ملصق طلب ${esc(o.order)}</title><style>
+@page{size:100mm 150mm;margin:0}*{box-sizing:border-box}body{margin:0;font-family:Tahoma,"Segoe UI",Arial,sans-serif;color:#000;background:#fff}
+.lab{width:100mm;height:150mm;padding:5mm;display:flex;flex-direction:column;gap:3mm;overflow:hidden}
+.box{border:.6mm solid #000;border-radius:3mm;padding:3mm;display:flex;flex-direction:column;align-items:center;gap:1.5mm}
+.lb{font-weight:700;letter-spacing:1.5mm;font-size:6.5mm;direction:ltr}.lb b{color:#00b5d9}
+.k{font-size:3.4mm;color:#333}.ord{font-family:Consolas,monospace;font-size:11mm;font-weight:700;direction:ltr;line-height:1}
+.bc svg{width:80mm;height:16mm;display:block}.cust{font-size:4.2mm;font-weight:700;text-align:center}
+.roll{flex:1;justify-content:space-between}.rn{font-family:Consolas,monospace;font-size:5.4mm;font-weight:700;direction:ltr;white-space:nowrap}
+.qr svg{width:40mm;height:40mm;display:block}.trust{font-size:3.4mm;font-weight:700;text-align:center}.trust b{color:#00b5d9}.cap{font-size:2.9mm;text-align:center}
+</style></head><body><div class="lab">
+<div class="box"><div class="lb">A<b>VV</b>A CAR</div><div class="k">رقم الطلب</div><div class="ord">${esc(o.order)}</div><div class="bc">${bc}</div>${o.customer?`<div class="cust">${esc(o.customer)}${o.city?" · "+esc(o.city):""}</div>`:""}</div>
+<div class="box roll"><div class="k">رقم الرول للضمان</div><div class="rn">${esc(o.roll.carton_no)}</div><div class="qr">${qr}</div><div class="trust">رول أصلي موثّق ومشمول بضمان A<b>VV</b>A CAR الرسمي</div><div class="cap">امسح الرمز أو اكتب رقم الرول في صفحة الضمان · warranty.avvacar.com</div></div>
+</div><script>setTimeout(()=>print(),400)<\/script></body></html>`;
+}
+$("#olPrint").onclick = async () => { if (!LAST_OUT) return; try { const h = await orderLabelHtml(LAST_OUT); const w = window.open("","_blank"); if (!w) { msg("#olMsg","المتصفح منع فتح صفحة الطباعة. اسمح بالنوافذ المنبثقة (Pop-ups).","bad"); return; } w.document.open(); w.document.write(h); w.document.close(); } catch(e){ msg("#olMsg", e.message||"تعذر تجهيز الملصق.","bad"); } };
+$("#olPdf").onclick = async () => { if (!LAST_OUT) return; try { const h = await orderLabelHtml(LAST_OUT); await htmlToPdf(h, 1, "AVVA-order-"+LAST_OUT.order+".pdf", "#olMsg", "#olPdf"); } catch(e){ msg("#olMsg", e.message||"تعذر تجهيز الملصق.","bad"); } };
 
 /* ---------- المخزون ---------- */
 let qT;
@@ -472,14 +506,13 @@ function labelsHtml(rows){
 }
 $("#printBtn").onclick = () => printLabels(selected());
 function loadScript(src){ return new Promise((res,rej)=>{ if (document.querySelector('script[src="'+src+'"]')) return res(); const s=document.createElement("script"); s.src=src; s.onload=res; s.onerror=()=>rej(new Error("تعذر تحميل مكتبة PDF، تأكد من الإنترنت.")); document.head.appendChild(s); }); }
-async function saveLabelsPdf(rows){
-  if (!rows.length) { msg("#printMsg","حدد ملصق واحد على الأقل من القائمة تحت (حط عليه صح ✓).","bad"); return; }
-  $("#pdfBtn").disabled = true;
+async function htmlToPdf(srcHtml, n, filename, msgSel, btnSel){
+  $(btnSel).disabled = true;
   try {
-    msg("#printMsg","جاري تجهيز ملف PDF... (0/"+rows.length+")","warn");
+    msg(msgSel,"جاري تجهيز ملف PDF...","warn");
     await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
     const H2C = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
-    const html = labelsHtml(rows).replace(/<script>setTimeout\(\(\)=>print\(\),400\)<\/script>/,"").replace('<div class="hint">','<div class="hint" style="display:none">').replace("</head>",'<script src="'+H2C+'"><\/script></head>');
+    const html = srcHtml.replace(/<script>setTimeout\(\(\)=>print\(\),400\)<\/script>/,"").replace('<div class="hint">','<div class="hint" style="display:none">').replace("</head>",'<script src="'+H2C+'"><\/script></head>');
     const fr = document.createElement("iframe"); fr.style.cssText="position:fixed;left:-10000px;top:0;width:420px;height:640px;border:0"; document.body.appendChild(fr);
     await new Promise(r=>{ fr.onload=r; fr.srcdoc=html; });
     for (let i=0;i<50 && !fr.contentWindow.html2canvas;i++) await new Promise(r=>setTimeout(r,100));
@@ -490,13 +523,16 @@ async function saveLabelsPdf(rows){
       const c = await fr.contentWindow.html2canvas(labs[i], { scale:3, backgroundColor:"#ffffff" });
       if (i) pdf.addPage([100,150],"portrait");
       pdf.addImage(c.toDataURL("image/png"), "PNG", 0, 0, 100, 150);
-      msg("#printMsg","جاري تجهيز ملف PDF... ("+(i+1)+"/"+rows.length+")","warn");
+      msg(msgSel,"جاري تجهيز ملف PDF... ("+(i+1)+"/"+labs.length+")","warn");
     }
-    fr.remove();
-    pdf.save("AVVA-labels-"+new Date().toISOString().slice(0,10)+"-"+rows.length+".pdf");
-    msg("#printMsg","تم ✓ نزل ملف PDF فيه "+rows.length+" ملصق. افتحه واطبعه على طابعة 10×15 بمقياس 100%. وبعد الطباعة اضغط \"تعليم المحدد كمطبوع\".","ok");
-  } catch(e){ msg("#printMsg", e.message || "تعذر إنشاء PDF.", "bad"); }
-  $("#pdfBtn").disabled = false;
+    fr.remove(); pdf.save(filename);
+    msg(msgSel,"تم ✓ نزل ملف PDF ("+labs.length+" ملصق). افتحه واطبعه على طابعة 10×15 بمقياس 100%.","ok");
+  } catch(e){ msg(msgSel, e.message || "تعذر إنشاء PDF.", "bad"); }
+  $(btnSel).disabled = false;
+}
+async function saveLabelsPdf(rows){
+  if (!rows.length) { msg("#printMsg","حدد ملصق واحد على الأقل من القائمة تحت (حط عليه صح ✓).","bad"); return; }
+  await htmlToPdf(labelsHtml(rows), rows.length, "AVVA-labels-"+new Date().toISOString().slice(0,10)+"-"+rows.length+".pdf", "#printMsg", "#pdfBtn");
 }
 $("#pdfBtn").onclick = () => saveLabelsPdf(selected());
 
