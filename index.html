@@ -126,7 +126,9 @@ dialog .card{margin:0}
   </details>
   <details class="card">
     <summary style="font-weight:700;cursor:pointer">كراتين بدون ملصق</summary>
-    <label>كم كرتون؟</label>
+    <label>بداية رقم الشحنة</label>
+    <input id="blankPrefix" class="ltr" placeholder="AVVA-5201.01092026">
+    <label>كم كرتون؟ (يكمّل الترقيم بعد آخر رقم مسجّل)</label>
     <div class="row">
       <input id="blankN" class="ltr" inputmode="numeric" placeholder="10" style="flex:1">
       <button class="btn" id="blankBtn" style="flex:2">إضافة</button>
@@ -235,7 +237,7 @@ async function login(p){
   if (!j.ok) { PASS=""; msg("#loginMsg", j.message || "كلمة المرور غير صحيحة.", "bad"); return; }
   ROLE = j.role; store.set("avva_rolls_pw", p);
   $("#login").classList.add("hide"); $("#app").classList.remove("hide"); $("#logout").classList.remove("hide");
-  const pf = store.get("avva_rolls_prefix"); if (pf) $("#prefix").value = pf;
+  const pf = store.get("avva_rolls_prefix"); if (pf) { $("#prefix").value = pf; $("#blankPrefix").value = pf; }
   refreshBar();
   if (matchMedia("(pointer:fine)").matches && innerWidth > 900) tab("print");
 }
@@ -366,11 +368,11 @@ let BLANK_IDS = new Set();
 $("#blankBtn").onclick = async () => {
   const n = parseInt(toLatin($("#blankN").value).replace(/\D/g,""),10);
   if (!n || n<1 || n>300) { msg("#blankMsg","اكتب عدد من 1 إلى 300.","bad"); return; }
-  $("#blankBtn").disabled = true; const j = await api("add_blank", { count:n }); $("#blankBtn").disabled = false;
+  $("#blankBtn").disabled = true; const j = await api("add_blank", { count:n, prefix: $("#blankPrefix").value.trim() }); $("#blankBtn").disabled = false;
   if (!j.ok) { msg("#blankMsg", j.message, "bad"); return; }
   beep(true); SESS += j.rows.length; $("#sbSess").textContent = SESS; refreshBar();
   BLANK_IDS = new Set(j.rows.map(r=>r.id));
-  msg("#blankMsg", `تم ✓ أضفت ${j.rows.length} رول (${j.rows[j.rows.length-1].code} إلى ${j.rows[0].code}). روح لتبويب الطباعة واطبع ملصقاتها.`, "ok");
+  const sq=j.rows.map(r=>r.seq).sort(); msg("#blankMsg", `تم ✓ أضفت ${j.rows.length} رول بالأرقام من ${sq[0]} إلى ${sq[sq.length-1]}. روح لتبويب الطباعة واطبع ملصقاتها.`, "ok");
   $("#blankN").value = "";
 };
 const seqOf = r => r.seq || r.code;
@@ -453,19 +455,19 @@ function printLabels0(rows){
   msg("#printMsg","انفتحت صفحة الملصقات في تبويب جديد مع أمر الطباعة. بعد ما تطبع ارجع هنا واضغط \"تعليم المحدد كمطبوع\".","ok");
 }
 function labelsHtml(rows){
-  const lab = r => { const u = `${r.qr_url}`; return `<div class="lab"><div class="top"><div class="lb">A<b>VV</b>A CAR</div><div class="seq">${esc(r.code)}</div><div class="qr">${qrSvg(u)}</div><div class="code">رقم الرول للضمان: <span>${esc(r.code)}</span></div><div class="trust">رول أصلي موثّق ومشمول بضمان A<b>VV</b>A CAR الرسمي</div><div class="cap">امسح الرمز أو اكتب رقم الرول في صفحة الضمان · warranty.avvacar.com</div></div><div class="cut"><span>✂ قص والصق داخل الكور${r.seq ? " · كرتون "+esc(r.seq) : ""}</span></div><div class="core"><div class="qr">${qrSvg(u)}</div><div class="t"><div class="lb sm">A<b>VV</b>A CAR</div><div class="c2">${esc(r.code)}</div><div class="cap">رقم الرول للضمان</div></div></div></div>`; };
+  const lab = r => { const u = `${r.qr_url}`; return `<div class="lab"><div class="top"><div class="lb">A<b>VV</b>A CAR</div><div class="seq num">${esc(r.carton_no)}</div><div class="qr">${qrSvg(u)}</div><div class="code">الرقم أعلاه هو رقم الرول للضمان</div><div class="trust">رول أصلي موثّق ومشمول بضمان A<b>VV</b>A CAR الرسمي</div><div class="cap">امسح الرمز أو اكتب رقم الرول في صفحة الضمان · warranty.avvacar.com</div></div><div class="cut"><span>✂ قص والصق داخل الكور</span></div><div class="core"><div class="qr">${qrSvg(u)}</div><div class="t"><div class="lb sm">A<b>VV</b>A CAR</div><div class="c2 num">${esc(r.carton_no)}</div><div class="cap">رقم الرول للضمان</div></div></div></div>`; };
   return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>ملصقات رولات AVVA</title><style>
 @page{size:100mm 150mm;margin:0}*{box-sizing:border-box}body{margin:0;font-family:Tahoma,"Segoe UI",Arial,sans-serif;color:#000;background:#fff}
 .hint{font:14px Tahoma;padding:10px;background:#e3f6fa}@media print{.hint{display:none}}
 .lab{width:100mm;height:150mm;padding:5mm;display:flex;flex-direction:column;gap:2.5mm;page-break-after:always;overflow:hidden}
 .top{border:.6mm solid #000;border-radius:3mm;padding:3mm;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:space-between}
 .lb{font-weight:700;letter-spacing:1.5mm;font-size:7mm;direction:ltr}.lb b{color:#00b5d9}.lb.sm{font-size:4.5mm;letter-spacing:1mm}
-.seq{font-size:13mm;font-weight:700;line-height:1;direction:ltr}.qr svg{width:42mm;height:42mm;display:block}
+.seq{font-size:13mm;font-weight:700;line-height:1;direction:ltr}.seq.num{font-family:Consolas,monospace;font-size:6.6mm;letter-spacing:-.1mm;white-space:nowrap}.qr svg{width:42mm;height:42mm;display:block}
 .code{font-size:4.2mm;font-weight:700}.code span{font-family:Consolas,monospace;direction:ltr;unicode-bidi:isolate;font-size:5.5mm}
 .full{font-family:Consolas,monospace;font-size:3.2mm;direction:ltr}.trust{font-size:3.6mm;font-weight:700;text-align:center}.trust b{color:#00b5d9}.cap{font-size:3mm;text-align:center}
 .cut{border-top:.4mm dashed #000;text-align:center;font-size:2.6mm;line-height:0;margin:1.5mm 0}.cut span{background:#fff;padding:0 2mm}
 .core{border:.6mm solid #000;border-radius:3mm;padding:2.5mm;height:36mm;display:flex;align-items:center;gap:3mm;direction:ltr}
-.core .qr svg{width:30mm;height:30mm}.core .t{direction:rtl;text-align:right;flex:1}.c2{font-family:Consolas,monospace;font-size:7mm;font-weight:700;direction:ltr;text-align:right}.core .cap{text-align:right}
+.core .qr svg{width:30mm;height:30mm}.core .t{direction:rtl;text-align:right;flex:1}.c2.num{font-size:3.6mm;white-space:nowrap}.c2{font-family:Consolas,monospace;font-size:7mm;font-weight:700;direction:ltr;text-align:right}.core .cap{text-align:right}
 </style></head><body><div class="hint">اطبع بحجم 100×150 مم وبدون هوامش (Margins: None) وبمقياس 100%.</div>${rows.map(lab).join("")}<script>setTimeout(()=>print(),400)<\/script></body></html>`;
 }
 $("#printBtn").onclick = () => printLabels(selected());
