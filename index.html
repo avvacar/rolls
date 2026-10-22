@@ -127,9 +127,9 @@ dialog .card{margin:0}
   </details>
   <details class="card">
     <summary style="font-weight:700;cursor:pointer">كراتين بدون ملصق</summary>
-    <label>بداية رقم الشحنة</label>
-    <input id="blankPrefix" class="ltr" placeholder="AVVA-5201.01092026">
-    <label>كم كرتون؟ (يكمّل الترقيم بعد آخر رقم مسجّل)</label>
+    <div style="font-size:13px;color:#555;line-height:1.7;margin:6px 0">ياخذون سلسلة أرقام خاصة فيهم بتاريخ اليوم، مختلفة عن رولات المصنع.<br>مثال: <b class="ltr" style="display:inline-block">AVVA-5201.<span id="blankDay"></span>-001</b></div>
+    <input id="blankPrefix" type="hidden">
+    <label>كم كرتون؟</label>
     <div class="row">
       <input id="blankN" class="ltr" inputmode="numeric" placeholder="10" style="flex:1">
       <button class="btn" id="blankBtn" style="flex:2">إضافة</button>
@@ -245,7 +245,8 @@ async function login(p){
   if (!j.ok) { PASS=""; msg("#loginMsg", j.message || "كلمة المرور غير صحيحة.", "bad"); return; }
   ROLE = j.role; store.set("avva_rolls_pw", p);
   $("#login").classList.add("hide"); $("#app").classList.remove("hide"); $("#logout").classList.remove("hide");
-  const pf = store.get("avva_rolls_prefix"); if (pf) { $("#prefix").value = pf; $("#blankPrefix").value = pf; }
+  const pf = store.get("avva_rolls_prefix"); if (pf) { $("#prefix").value = pf; }
+  { const d=new Date(Date.now()+(180+new Date().getTimezoneOffset())*60000); $("#blankDay").textContent=String(d.getDate()).padStart(2,"0")+String(d.getMonth()+1).padStart(2,"0")+d.getFullYear(); }
   refreshBar();
   if (matchMedia("(pointer:fine)").matches && innerWidth > 900) tab("print");
 }
@@ -408,7 +409,7 @@ $("#blankBtn").onclick = async () => {
   if (!j.ok) { msg("#blankMsg", j.message, "bad"); return; }
   beep(true); SESS += j.rows.length; $("#sbSess").textContent = SESS; refreshBar();
   BLANK_IDS = new Set(j.rows.map(r=>r.id));
-  const sq=j.rows.map(r=>r.seq).sort(); msg("#blankMsg", `تم ✓ أضفت ${j.rows.length} رول بالأرقام من ${sq[0]} إلى ${sq[sq.length-1]}. روح لتبويب الطباعة واطبع ملصقاتها.`, "ok");
+  const sq=j.rows.map(r=>r.seq).sort(); const c0=j.rows.find(r=>r.seq===sq[0]).carton_no, c1=j.rows.find(r=>r.seq===sq[sq.length-1]).carton_no; msg("#blankMsg", `تم ✓ أضفت ${j.rows.length} كرتون: من ${c0} إلى ${c1}. روح لتبويب الطباعة واطبع ملصقاتها.`, "ok");
   $("#blankN").value = "";
 };
 const seqOf = r => r.seq || r.code;
