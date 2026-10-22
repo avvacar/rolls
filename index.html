@@ -31,9 +31,10 @@ input.ltr{direction:ltr;text-align:left;font-family:ui-monospace,Menlo,monospace
 .btn.sec{background:#e3f6fa;color:var(--ink)}.btn.w{width:100%}.btn:disabled{opacity:.5}
 .btn.red{background:#fdecec;color:var(--bad)}
 .row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}
-.cam{position:relative;background:#000;border-radius:12px;overflow:hidden;aspect-ratio:4/3;display:none}
+.cam{position:relative;background:#000;border-radius:12px;overflow:hidden;aspect-ratio:3/4;max-height:72vh;width:100%;display:none}
+#camIn{margin-inline:-8px;width:calc(100% + 16px)}
 .cam video{width:100%;height:100%;object-fit:cover}
-.cam .guide{position:absolute;left:6%;right:6%;top:40%;height:20%;border:2px solid var(--cyan);border-radius:8px;box-shadow:0 0 0 999px rgba(0,0,0,.35)}
+.cam .guide{position:absolute;left:4%;right:4%;top:28%;height:44%;border:2px solid var(--cyan);border-radius:8px;box-shadow:0 0 0 999px rgba(0,0,0,.35)}
 .cam .hint{position:absolute;bottom:8px;left:0;right:0;text-align:center;color:#fff;font-size:13px}
 .big{font-size:44px;font-weight:700;text-align:center;direction:ltr;margin:6px 0}
 .mono{font-family:ui-monospace,Menlo,monospace;direction:ltr;unicode-bidi:embed}
@@ -106,9 +107,9 @@ dialog .card{margin:0}
 <section id="t-in">
   <div class="card">
     <h2>إدخال رول للمستودع</h2>
-    <div class="cam" id="camIn"><video playsinline muted></video><div class="guide"></div><div class="hint">خلّ سطر ROLL NO داخل الإطار واضغط التقط، والحفظ تلقائي</div></div>
+    <div class="cam" id="camIn"><video playsinline muted></video><div class="guide"></div><div class="hint" id="camHint" style="font-size:15px;font-weight:700">وجّه الكاميرا على ملصق الكرتون (الباركود وسطر ROLL NO)</div></div>
     <div class="row" style="margin-top:10px">
-      <button class="btn" id="ocrStart">📷 صوّر رقم الرول</button>
+      <button class="btn" id="ocrStart">📷 ابدأ المسح</button>
       <button class="btn sec hide" id="ocrShot">التقط</button>
       <button class="btn sec hide" id="ocrStop">إغلاق الكاميرا</button>
     </div>
@@ -297,32 +298,52 @@ async function getTess(){
   msg("#ocrMsg","جاري تجهيز قارئ الأرقام لأول مرة...","warn");
   await new Promise((res,rej)=>{ const s=document.createElement("script"); s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"; s.onload=res; s.onerror=rej; document.head.appendChild(s); });
   tess = await Tesseract.createWorker("eng");
-  await tess.setParameters({ tessedit_char_whitelist:"AVROLNO.:-0123456789 ", tessedit_pageseg_mode:"7" });
+  await tess.setParameters({ tessedit_char_whitelist:"AVROLNO.:-0123456789 ", tessedit_pageseg_mode:"11" });
   return tess;
 }
+let SCAN_ON=false, lastRead="", readCount=0, lastSaved="", lastSavedAt=0;
 $("#ocrStart").onclick = async () => {
-  try { await openCam($("#camIn")); $("#ocrStart").classList.add("hide"); $("#ocrShot").classList.remove("hide"); $("#ocrStop").classList.remove("hide"); getTess().then(()=>msg("#ocrMsg","","")).catch(()=>{}); }
-  catch(e){ alert("ما قدرت أفتح الكاميرا. تأكد إنك سمحت للمتصفح يستخدمها."); }
+  try { await openCam($("#camIn")); } catch(e){ alert("ما قدرت أفتح الكاميرا. تأكد إنك سمحت للمتصفح يستخدمها."); return; }
+  $("#ocrStart").classList.add("hide"); $("#ocrStop").classList.remove("hide");
+  $("#camIn").scrollIntoView({behavior:"smooth",block:"start"});
+  SCAN_ON = true; lastRead=""; readCount=0;
+  try { await getTess(); } catch(e){ msg("#ocrMsg","قارئ الأرقام ما اشتغل، اكتب الرقم يدوي.","bad"); return; }
+  msg("#ocrMsg","","");
+  scanLoop();
 };
-$("#ocrStop").onclick = stopAll;
-$("#ocrShot").onclick = async () => {
-  const v = $("#camIn video"); if (!v.videoWidth) return;
+$("#ocrStop").onclick = () => { SCAN_ON=false; stopAll(); };
+function hint(s){ const h=$("#camHint"); if (h) h.textContent = s; }
+function grabGuide(){
+  const v = $("#camIn video"); if (!v.videoWidth) return null;
   const vw=v.videoWidth, vh=v.videoHeight, el=v.getBoundingClientRect();
-  // map guide box (6%..94% x, 40%..60% y of the displayed element, object-fit:cover) to video pixels
   const scale = Math.max(el.width/vw, el.height/vh), dw=vw*scale, dh=vh*scale, ox=(dw-el.width)/2, oy=(dh-el.height)/2;
-  const sx=(el.width*0.06+ox)/scale, sy=(el.height*0.38+oy)/scale, sw=(el.width*0.88)/scale, sh=(el.height*0.24)/scale;
-  const c=document.createElement("canvas"); const k = Math.min(3, 1600/sw); c.width=sw*k; c.height=sh*k;
-  const g=c.getContext("2d"); g.filter="grayscale(1) contrast(1.6)"; g.drawImage(v,sx,sy,sw,sh,0,0,c.width,c.height);
-  msg("#ocrMsg","جاري القراءة...","warn"); $("#ocrShot").disabled = true;
-  try {
-    const w = await getTess(); const { data } = await w.recognize(c);
-    const p = parseCarton(data.text);
-    if (p) { $("#carton").value = p.full; $("#prefix").value = p.prefix; $("#seq").value = p.seq; beep(true);
-      msg("#ocrMsg", "قريت: " + p.full + " — جاري الحفظ...", "ok"); await saveRoll(); msg("#ocrMsg","صوّر الكرتون اللي بعده 📷","ok"); }
-    else { beep(false); msg("#ocrMsg","ما قدرت أقرا الرقم. قرّب الكاميرا وخلّ سطر ROLL NO كامل داخل الإطار، أو اكتب آخر الأرقام يدوي.","bad"); }
-  } catch(e){ msg("#ocrMsg","قارئ الأرقام ما اشتغل، اكتب الرقم يدوي.","bad"); }
-  $("#ocrShot").disabled = false;
-};
+  const sx=(el.width*0.04+ox)/scale, sy=(el.height*0.28+oy)/scale, sw=(el.width*0.92)/scale, sh=(el.height*0.44)/scale;
+  const c=document.createElement("canvas"); const k=Math.min(2.5, 1400/sw); c.width=sw*k; c.height=sh*k;
+  const g=c.getContext("2d"); g.filter="grayscale(1) contrast(1.6)"; g.drawImage(v,sx,sy,sw,sh,0,0,c.width,c.height); return c;
+}
+async function scanLoop(){
+  while (SCAN_ON && streams["camIn"]) {
+    const c = grabGuide();
+    if (c) {
+      try {
+        const { data } = await tess.recognize(c);
+        const p = parseCarton(data.text.replace(/\n/g," "));
+        if (p) {
+          if (p.full === lastRead) readCount++; else { lastRead = p.full; readCount = 1; }
+          hint("قريت " + p.seq + " …");
+          const recentSame = p.full === lastSaved && Date.now()-lastSavedAt < 8000;
+          if (readCount >= 2 && !recentSame) {
+            lastSaved = p.full; lastSavedAt = Date.now();
+            $("#carton").value = p.full; $("#prefix").value = p.prefix; $("#seq").value = p.seq;
+            await saveRoll(); hint("✓ " + p.seq + " — حرّك الكاميرا على الكرتون اللي بعده");
+            await new Promise(r=>setTimeout(r,900));
+          }
+        } else { readCount = 0; hint("وجّه الكاميرا على ملصق الكرتون (الباركود وسطر ROLL NO)"); }
+      } catch(e){}
+    }
+    await new Promise(r=>setTimeout(r,250));
+  }
+}
 $("#seq").oninput = () => { const pf=$("#prefix").value.trim(), s=toLatin($("#seq").value).replace(/\D/g,""); if (pf && s) { const p=parseCarton(pf+"-"+s); if (p) $("#carton").value = p.full; } };
 $("#seq").onkeydown = e => { if (e.key==="Enter") { e.preventDefault(); saveRoll(); } };
 $("#innerScan").onclick = () => scanInto("#camInner", code => { $("#inner").value = code; });
