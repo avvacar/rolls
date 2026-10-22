@@ -564,10 +564,10 @@ async function loadPrint(){
   const groups = {};
   PROWS.forEach((r,i)=>{
     const bk=`${r.product_code}.${r.batch}`; let k, title, sub;
-    if (r.batch && r.batch===ddmm(r.created_at)) { k="b:"+bk; title=`كراتين بدون ملصق — أُضيفت ${dOf(r.batch)}`; sub=`AVVA-${bk}`; }
+    if (r.batch && r.batch===ddmm(r.created_at)) { const hm=new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Riyadh",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date(r.created_at)); k="b:"+bk+":"+hm; title=`كراتين بدون ملصق — أُضيفت ${dOf(r.batch)} الساعة ${hm}`; sub=`AVVA-${bk}`; }
     else if (cnt[bk]>=3) { k="f:"+bk; title="رولات المصنع"; sub=`AVVA-${bk}`; }
     else { k="m"; title="قراءات تحتاج مراجعة"; sub="أرقام قرأتها الكاميرا غلط"; }
-    const g = (groups[k] ||= {k, title, sub, rows:[], last:""}); g.rows.push(i); if ((r.created_at||"")>g.last) g.last=r.created_at||"";
+    const g = (groups[k] ||= {k, title, sub, rows:[], last:""}); g.rows.push(i); if (k.startsWith("b:")) g.sub = `AVVA-${bk}-${PROWS[g.rows[0]].seq} … ${r.seq}`; if ((r.created_at||"")>g.last) g.last=r.created_at||"";
   });
   const list = Object.values(groups).sort((a,b)=> (a.k==="m")-(b.k==="m") || b.last.localeCompare(a.last));
   $("#pgroups").innerHTML = list.map((g,gi)=>{
@@ -586,7 +586,14 @@ $("#selAll").onchange = e => document.querySelectorAll(".pc").forEach(c => c.che
 function askMarkPrinted(rows){
   if (PSEG!=="new" || !rows.length) return;
   const ids = rows.map(r=>r.id);
-  setTimeout(()=>{ const m=$("#printMsg"); m.className="msg ok"; m.style.display="block"; m.innerHTML=`جاهز ✓ (${ids.length} ملصق). <b>بعد ما تطبعها</b> اضغط: <button class="btn" id="mkNow" style="margin-top:8px;width:100%">✓ طبعتها — انقلها للمطبوع</button>`; $("#mkNow").onclick=async()=>{ const j=await api("mark_printed",{ids}); msg("#printMsg", j.ok?`تم ✓ انتقلت ${j.count} ملصق إلى المطبوع.`:j.message, j.ok?"ok":"bad"); loadPrint(); }; }, 50);
+  setTimeout(async()=>{
+    const j = await api("mark_printed",{ids});
+    if (!j.ok) { msg("#printMsg", j.message, "bad"); return; }
+    await loadPrint();
+    const m=$("#printMsg"); m.className="msg ok"; m.style.display="block";
+    m.innerHTML=`تم ✓ انتقلت ${ids.length} ملصق تلقائياً إلى <b>المطبوع</b>.<br><small>ما طبعتها؟</small> <button class="btn sec" id="mkUndo" style="margin-top:8px;width:100%">↩ رجّعها للجديد</button>`;
+    $("#mkUndo").onclick=async()=>{ const x=await api("mark_printed",{ids,unmark:true}); await loadPrint(); msg("#printMsg", x.ok?`رجعت ${ids.length} ملصق للجديد.`:x.message, x.ok?"ok":"bad"); };
+  }, 50);
 }
 const selected = () => [...document.querySelectorAll(".pc:checked")].map(c => PROWS[+c.dataset.i]);
 function qrSvg(text){ const q = qrcode(0,"M"); q.addData(text); q.make(); return q.createSvgTag({cellSize:4, margin:1, scalable:true}); }
