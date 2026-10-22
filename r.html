@@ -95,6 +95,35 @@ h1 .g{color:var(--gold-l)}
 .social a{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);background:var(--navy)}
 .social svg{width:19px;height:19px;fill:var(--steel)}
 .social a:hover svg,.social a:focus-visible svg{fill:var(--cyan)}
+
+.cert{position:relative;border-radius:20px;overflow:hidden;color:var(--void);background:#f6f8fb;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 1px rgba(200,168,75,.35)}
+.cert::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.55;
+ background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='40' viewBox='0 0 120 40'%3E%3Cpath d='M0 20 C20 0 40 40 60 20 S100 0 120 20' fill='none' stroke='%2300a3c4' stroke-opacity='.10' stroke-width='.8'/%3E%3Cpath d='M0 28 C20 8 40 48 60 28 S100 8 120 28' fill='none' stroke='%23c8a84b' stroke-opacity='.12' stroke-width='.6'/%3E%3Cpath d='M0 12 C20 -8 40 32 60 12 S100 -8 120 12' fill='none' stroke='%2300a3c4' stroke-opacity='.07' stroke-width='.6'/%3E%3C/svg%3E")}
+.cert .frame{position:absolute;inset:10px;border:1px solid rgba(200,168,75,.55);border-radius:14px;pointer-events:none}
+.cert .frame::after{content:"";position:absolute;inset:4px;border:1px solid rgba(200,168,75,.25);border-radius:11px}
+.cert .in{position:relative;padding:30px 26px 24px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.cert .kicker{font-family:var(--f-en);font-weight:600;font-size:12px;letter-spacing:.34em;color:#8a7230}
+.cert h1{color:var(--void);font-size:30px}
+.cert h1 .g{color:#a8892f}
+.cert .sub{color:#6b7390}
+.cert .seal{width:126px;height:144px;margin:0}
+.cert .rule{width:70%;height:1px;background:linear-gradient(90deg,transparent,#c8a84b,transparent)}
+.cert .rn{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%}
+.cert .rn span{font-size:12px;color:#6b7390;letter-spacing:.06em}
+.cert .rn b{font-family:var(--f-en);font-weight:700;font-size:clamp(20px,6.4vw,28px);letter-spacing:.04em;direction:ltr;white-space:nowrap}
+.cert .copy{color:#007f99;background:rgba(0,163,196,.08);border-color:rgba(0,163,196,.35)}
+.cert table{width:100%;border-collapse:collapse;font-size:14px}
+.cert td{padding:10px 4px;border-bottom:1px solid rgba(10,10,15,.08);text-align:right}
+.cert td:last-child{text-align:left;font-family:var(--f-en);font-weight:700;font-size:17px;letter-spacing:.04em;direction:ltr}
+.cert td:first-child{color:#5d6480}
+.cert tr:last-child td{border-bottom:0}
+.cert .sig{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;width:100%;margin-top:4px}
+.cert .sig img{height:74px;width:auto;mix-blend-mode:multiply}
+.cert .sig .who{display:flex;flex-direction:column;align-items:flex-start;text-align:right;font-size:12px;color:#5d6480;line-height:1.5}
+.cert .sig .who b{color:var(--void);font-size:15px}
+.cert .stamp{width:100%;display:flex;justify-content:space-between;gap:8px;padding-top:10px;border-top:1px dashed rgba(10,10,15,.15);font-family:var(--f-en);font-size:11px;letter-spacing:.14em;color:#6b7390;direction:ltr}
+.cert .stamp b{color:#00795f}
+.cert .pill{background:#fff;border-color:rgba(10,10,15,.12);color:var(--void)}
 .note{font-size:13px;color:var(--steel);line-height:1.8;text-align:center;margin:0}
 footer{display:flex;flex-direction:column;align-items:center;gap:10px;padding-top:10px}
 .slogan{display:flex;flex-direction:column;align-items:center;line-height:1.15}
@@ -134,6 +163,7 @@ footer a{color:var(--steel);text-decoration:none;font-family:var(--f-en);letter-
     <div id="pillBox"></div>
   </section>
 
+  <section class="cert" id="cert" hidden><div class="frame"></div><div class="in" id="certIn"></div></section>
   <div id="content">
     <div class="card"><div class="skel" style="width:60%"></div><div style="height:12px"></div><div class="skel"></div></div>
   </div>
@@ -166,7 +196,7 @@ footer a{color:var(--steel);text-decoration:none;font-family:var(--f-en);letter-
 const API = "https://uctvlqcwltpiqabyvchb.supabase.co/functions/v1/rolls";
 const WARRANTY = "https://warranty.avvacar.com/";
 const SPECS = {
-  "5201": { type:"Gloss Clear", ar:"شفاف لامع", material:"LUBRIZOL", glue:"ASHLAND", thickness:"8.5 mil", size:"1.52 × 15 م" }
+  "5201": { type:"Gloss Clear", ar:"شفاف لامع", material:"LUBRIZOL", glue:"ASHLAND", thickness:"8.5 mil", size:"1.52 × 15 m" }
 };
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -179,6 +209,7 @@ async function copy(text){
 function pill(kind, text){ $("#pillBox").innerHTML = `<div class="pill ${kind}"><i></i>${esc(text)}</div>`; }
 
 function notFound(msg){
+  $("#hero").hidden = false;
   $("#hero").querySelector(".seal").style.display="none";
   $("#title").innerHTML = "هذا الرمز غير مسجّل لدى <span class='en'>AVVA CAR</span>";
   $("#subtitle").textContent = "NOT VERIFIED";
@@ -190,44 +221,48 @@ function notFound(msg){
 function render(r){
   const parts = /^AVVA-(\d+)\.(\d+)-(\d+)$/.exec(r.carton_no || "") || [];
   const sp = SPECS[parts[1]] || { type: r.film || "PPF", ar: r.film || "" };
-  if (r.status === "void") {
-    $("#title").innerHTML = "رول <span class='en'>AVVA CAR</span> أصلي";
-    $("#subtitle").textContent = "GENUINE · NOT ELIGIBLE";
-    pill("bad", "غير مشمول بالضمان");
-  } else {
-    $("#title").innerHTML = "رول أصلي <span class='g'>معتمد</span>";
-    $("#subtitle").textContent = "GENUINE AVVA CAR ROLL";
-    pill(r.warranty_registered ? "" : "warn", r.warranty_registered ? "الضمان مفعّل" : (r.sold ? "مُباع عبر المتجر الرسمي" : "موثّق في مستودع AVVA CAR"));
-  }
-  const bd = batchDate(parts[2]);
-  const war = r.status === "void"
-    ? `<p>هذا الرول مسجّل عندنا كرول غير صالح للضمان. إذا تشوف إن فيه خطأ تواصل معنا.</p><a class="cta ghost" href="mailto:avvacar.store@gmail.com">avvacar.store@gmail.com</a>`
+  const bd = batchDate(parts[2]), voided = r.status === "void";
+  const now = new Date(), stamp = now.toLocaleDateString("en-GB") + " · " + now.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
+  const status = voided ? ["bad","غير مشمول بالضمان"] : r.warranty_registered ? ["","الضمان مفعّل"] : r.sold ? ["warn","مُباع عبر المتجر الرسمي"] : ["warn","موثّق في مستودع AVVA CAR"];
+  const row = (k, v) => v ? `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>` : "";
+  $("#cert").hidden = false; $("#hero").hidden = true;
+  $("#certIn").innerHTML = `
+    <div class="kicker">CERTIFICATE OF AUTHENTICITY</div>
+    <div class="seal" aria-hidden="true"><svg viewBox="0 0 140 160">
+      <polygon class="glow" points="70,4 136,42 136,118 70,156 4,118 4,42" fill="none" stroke="#c8a84b" stroke-width="10" opacity=".25" filter="blur(6px)"/>
+      <polygon class="ring" points="70,4 136,42 136,118 70,156 4,118 4,42" fill="rgba(200,168,75,.08)" stroke="#b8963a" stroke-width="3"/>
+      <polygon points="70,18 124,49 124,111 70,142 16,111 16,49" fill="none" stroke="#b8963a" stroke-opacity=".45" stroke-width="1"/>
+      <path class="tick" d="M44 82 L62 100 L98 62" fill="none" stroke="${voided ? "#b42323" : "#a8892f"}" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg></div>
+    <h1>${voided ? "رول أصلي من <span class='en'>AVVA CAR</span>" : "شهادة أصالة <span class='g'>الرول</span>"}</h1>
+    <p class="sub en">GENUINE AVVA CAR ROLL</p>
+    <div class="pill ${status[0]}"><i></i>${esc(status[1])}</div>
+    <div class="rule"></div>
+    <div class="rn"><span>رقم الرول · ROLL NUMBER</span><b id="rollv">${esc(r.carton_no)}</b><button class="copy" id="copyBtn" type="button">نسخ رقم الرول</button></div>
+    <div class="rule"></div>
+    <table>
+      ${row("نوع الفلم", sp.type + (sp.ar ? " · " + sp.ar : ""))}
+      ${row("الخامة", sp.material)}
+      ${row("الغراء", sp.glue)}
+      ${row("السماكة", sp.thickness)}
+      ${row("المقاس", sp.size)}
+      ${row("دفعة الإنتاج", bd)}
+    </table>
+    <div class="sig">
+      <img src="https://uctvlqcwltpiqabyvchb.supabase.co/functions/v1/email-assets/signature.jpg" alt="توقيع المدير العام" onerror="this.remove()">
+      <div class="who"><span>اعتماد</span><b>المدير العام</b><span class="en" style="letter-spacing:.18em">AVVA CAR</span></div>
+    </div>
+    <div class="stamp"><span>VERIFIED <b>✓</b></span><span>${esc(stamp)}</span></div>`;
+  const war = voided
+    ? `<p>هذا الرول مسجّل عندنا كرول غير صالح للضمان. إذا تشوف إن فيه خطأ تواصل معنا.</p>`
     : r.warranty_registered
       ? `<div class="done">✓ ضمان هذا الرول مفعّل ومسجّل باسم صاحبه</div><a class="cta ghost" href="${WARRANTY}">افتح صفحة الضمان</a>`
       : `<p>كل رول من <b class="en">AVVA CAR</b> مشمول بالضمان الرسمي. فعّل ضمانك بخطوتين:</p>
-         <ol class="steps"><li>انسخ رقم الرول من الأعلى.</li><li>افتح صفحة الضمان، واكتب رقم طلبك، والصق رقم الرول في خانته.</li></ol>
+         <ol class="steps"><li>انسخ رقم الرول من الشهادة.</li><li>افتح صفحة الضمان، واكتب رقم طلبك، والصق رقم الرول في خانته.</li></ol>
          <a class="cta" href="${WARRANTY}">فعّل ضمانك الآن ←</a>`;
   $("#content").innerHTML = `
     <div style="display:flex;flex-direction:column;gap:18px">
-      <div class="card">
-        <h2>رقم الرول <span class="en">ROLL NUMBER</span></h2>
-        <div class="rollno"><div class="v mono" id="rollv">${esc(r.carton_no)}</div><button class="copy" id="copyBtn" type="button">نسخ</button></div>
-      </div>
-      <div class="card">
-        <h2>مواصفات الرول <span class="en">SPECIFICATIONS</span></h2>
-        <div class="specs">
-          <div class="spec wide"><span>نوع الفلم</span><b><span class="en" style="font-size:22px;font-weight:700">${esc(sp.type)}</span>${sp.ar ? " · " + esc(sp.ar) : ""}</b></div>
-          ${sp.material ? `<div class="spec"><span>الخامة</span><b class="mono">${esc(sp.material)}</b></div>` : ""}
-          ${sp.glue ? `<div class="spec"><span>الغراء</span><b class="mono">${esc(sp.glue)}</b></div>` : ""}
-          ${sp.thickness ? `<div class="spec"><span>السماكة</span><b class="mono">${esc(sp.thickness)}</b></div>` : ""}
-          ${sp.size ? `<div class="spec"><span>المقاس</span><b class="mono">${esc(sp.size)}</b></div>` : ""}
-          ${bd ? `<div class="spec wide"><span>دفعة الإنتاج</span><b class="mono">${esc(bd)}</b></div>` : ""}
-        </div>
-      </div>
-      <div class="card war">
-        <h2>الضمان <span class="en">WARRANTY</span></h2>
-        ${war}
-      </div>
+      <div class="card war"><h2>الضمان <span class="en">WARRANTY</span></h2>${war}</div>
       <p class="note">صُنع في مصنع <b class="en">AVVA CAR</b> الخاص، ولا يُباع إلا عبر المتجر الرسمي <b class="en">avvacar.com</b></p>
     </div>`;
   $("#copyBtn").onclick = () => copy(r.carton_no);
