@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>مستودع الرولات</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<style>
+:root{--ink:#0a0a0f;--cyan:#00d4ff;--cyan-d:#009ab8;--bg:#f0f4f8;--card:#fff;--line:#e0e4ec;--mut:#4a5068;--ok:#0a8f5b;--warn:#b26a00;--bad:#c62828}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif;font-size:16px}
+header{background:var(--ink);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:5}
+.brand{font-weight:700;letter-spacing:2px;font-size:20px;direction:ltr}.brand b{color:var(--cyan)}
+header .sub{color:#9aa3bd;font-size:13px;flex:1}
+header button{background:none;border:1px solid #333a50;color:#9aa3bd;border-radius:8px;padding:6px 10px;font:inherit;font-size:13px}
+nav{display:flex;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:52px;z-index:4}
+nav button{flex:1;padding:12px 4px;border:0;background:none;font:inherit;font-weight:600;color:var(--mut);border-bottom:3px solid transparent}
+nav button.on{color:var(--ink);border-color:var(--cyan)}
+main{max-width:720px;margin:0 auto;padding:16px}
+.card{background:var(--card);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+h2{margin:0 0 10px;font-size:18px}
+label{display:block;font-size:14px;color:var(--mut);margin:10px 0 4px}
+input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff}
+input.ltr{direction:ltr;text-align:left;font-family:ui-monospace,Menlo,monospace}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 16px;border-radius:10px;border:0;font:inherit;font-weight:700;background:var(--ink);color:var(--cyan);cursor:pointer}
+.btn.sec{background:#e3f6fa;color:var(--ink)}.btn.w{width:100%}.btn:disabled{opacity:.5}
+.btn.red{background:#fdecec;color:var(--bad)}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}
+.cam{position:relative;background:#000;border-radius:12px;overflow:hidden;aspect-ratio:4/3;display:none}
+.cam video{width:100%;height:100%;object-fit:cover}
+.cam .guide{position:absolute;left:6%;right:6%;top:40%;height:20%;border:2px solid var(--cyan);border-radius:8px;box-shadow:0 0 0 999px rgba(0,0,0,.35)}
+.cam .hint{position:absolute;bottom:8px;left:0;right:0;text-align:center;color:#fff;font-size:13px}
+.big{font-size:44px;font-weight:700;text-align:center;direction:ltr;margin:6px 0}
+.mono{font-family:ui-monospace,Menlo,monospace;direction:ltr;unicode-bidi:embed}
+.msg{padding:12px;border-radius:10px;margin-top:10px;font-weight:600;display:none}
+.msg.ok{background:#e6f6ef;color:var(--ok)}.msg.warn{background:#fff4e0;color:var(--warn)}.msg.bad{background:#fdecec;color:var(--bad)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--card);border-radius:12px;padding:12px;text-align:center}
+.stat b{display:block;font-size:28px}.stat span{font-size:13px;color:var(--mut)}
+.stat.main{background:var(--ink);color:#fff}.stat.main b{color:var(--cyan)}.stat.main span{color:#9aa3bd}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td,th{padding:9px 6px;border-bottom:1px solid var(--line);text-align:right;vertical-align:middle}
+th{color:var(--mut);font-weight:600;font-size:13px}
+.pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:700}
+.p-in_stock{background:#e6f6ef;color:var(--ok)}.p-assigned{background:#e3f6fa;color:var(--cyan-d)}.p-installed{background:#ece9ff;color:#4b3db8}.p-returned{background:#fff4e0;color:var(--warn)}.p-damaged{background:#fdecec;color:var(--bad)}
+.recent div{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.hide{display:none!important}
+dialog{border:0;border-radius:14px;padding:0;width:min(520px,94vw)}dialog::backdrop{background:rgba(0,0,0,.5)}
+dialog .card{margin:0}
+#login{max-width:380px;margin:60px auto}
+/* labels: one 10x15cm page per roll */
+#labels{display:none}
+@media print{
+  @page{size:100mm 150mm;margin:0}
+  body{background:#fff}
+  header,nav,main,dialog{display:none!important}
+  #labels{display:block}
+  .lab{width:100mm;height:150mm;page-break-after:always;padding:5mm;display:flex;flex-direction:column;gap:3mm;overflow:hidden}
+}
+.lab{font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif;color:#000}
+.lab .top{border:0.6mm solid #000;border-radius:3mm;padding:3mm;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:space-between}
+.lab .lb{font-weight:700;letter-spacing:1.5mm;font-size:7mm;direction:ltr}.lab .lb b{color:#00b5d9}
+.lab .seq{font-size:15mm;font-weight:700;line-height:1;direction:ltr}
+.lab .full{font-family:ui-monospace,Menlo,monospace;font-size:3.4mm;direction:ltr}
+.lab .qr svg{width:44mm;height:44mm;display:block}
+.lab .cap{font-size:3.4mm;text-align:center}
+.lab .cut{border-top:0.4mm dashed #000;text-align:center;font-size:2.6mm;line-height:0;margin:1mm 0}
+.lab .cut span{background:#fff;padding:0 2mm}
+.lab .core{border:0.6mm solid #000;border-radius:3mm;padding:2.5mm;height:36mm;display:flex;align-items:center;gap:3mm;direction:ltr}
+.lab .core .qr svg{width:30mm;height:30mm}
+.lab .core .t{direction:rtl;text-align:right;flex:1}
+.lab .core .s2{font-size:9mm;font-weight:700;direction:ltr;text-align:right}
+</style>
+</head>
+<body>
+<header><div class="brand">A<b>VV</b>A CAR</div><div class="sub">مستودع الرولات</div><button id="logout" class="hide">خروج</button></header>
+
+<div id="login" class="card">
+  <h2>دخول المستودع</h2>
+  <label>كلمة المرور</label>
+  <input id="pw" type="password" autocomplete="current-password">
+  <div style="height:12px"></div>
+  <button class="btn w" id="loginBtn">دخول</button>
+  <div class="msg" id="loginMsg"></div>
+</div>
+
+<div id="app" class="hide">
+<nav>
+  <button data-t="in" class="on">إدخال</button>
+  <button data-t="out">صرف</button>
+  <button data-t="stock">المخزون</button>
+  <button data-t="print">الطباعة</button>
+</nav>
+<main>
+
+<!-- ============ إدخال ============ -->
+<section id="t-in">
+  <div class="card">
+    <h2>إدخال رول للمستودع</h2>
+    <div class="cam" id="camIn"><video playsinline muted></video><div class="guide"></div><div class="hint">خلّ سطر ROLL NO داخل الإطار</div></div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" id="ocrStart">📷 صوّر رقم الرول</button>
+      <button class="btn sec hide" id="ocrShot">التقط</button>
+      <button class="btn sec hide" id="ocrStop">إغلاق الكاميرا</button>
+    </div>
+    <div class="msg" id="ocrMsg"></div>
+    <label>رقم الرول</label>
+    <input id="carton" class="ltr" placeholder="AVVA-5201.01092026-129">
+    <label>أو اكتب آخر الأرقام بس (بداية الشحنة محفوظة)</label>
+    <div class="row">
+      <input id="prefix" class="ltr" placeholder="AVVA-5201.01092026" style="flex:2">
+      <input id="seq" class="ltr" inputmode="numeric" placeholder="129" style="flex:1">
+    </div>
+    <label>باركود اللفة الداخلي (اختياري)</label>
+    <div class="row">
+      <input id="inner" class="ltr" placeholder="417596KXY20260824-6-1" style="flex:3">
+      <button class="btn sec" id="innerScan" style="flex:1">📷 سكان</button>
+    </div>
+    <div class="cam" id="camInner" style="margin-top:8px"><video playsinline muted></video><div class="hint">وجّه الكاميرا على باركود اللفة</div></div>
+    <div style="height:12px"></div>
+    <button class="btn w" id="addBtn">تأكيد وحفظ</button>
+    <div class="msg" id="addMsg"></div>
+  </div>
+  <div class="card"><h2>آخر الإدخالات</h2><div class="recent" id="recent"><span style="color:var(--mut)">لا يوجد بعد</span></div></div>
+</section>
+
+<!-- ============ صرف ============ -->
+<section id="t-out" class="hide">
+  <div class="card">
+    <h2>صرف رول لطلب</h2>
+    <label>١. امسح ملصق الرول (QR)</label>
+    <div class="row">
+      <input id="outRoll" class="ltr" placeholder="R-000001 أو رقم الرول" style="flex:3">
+      <button class="btn sec" id="outRollScan" style="flex:1">📷 سكان</button>
+    </div>
+    <div class="cam" id="camOutRoll" style="margin-top:8px"><video playsinline muted></video><div class="hint">وجّه الكاميرا على ملصق QR</div></div>
+    <div id="outRollInfo" class="msg"></div>
+    <label>٢. امسح باركود الفاتورة أو اكتب رقم الطلب</label>
+    <div class="row">
+      <input id="outOrder" class="ltr" inputmode="numeric" placeholder="294917352" style="flex:3">
+      <button class="btn sec" id="outOrderScan" style="flex:1">📷 سكان</button>
+    </div>
+    <div class="cam" id="camOutOrder" style="margin-top:8px"><video playsinline muted></video><div class="hint">وجّه الكاميرا على باركود الفاتورة</div></div>
+    <div style="height:12px"></div>
+    <button class="btn w" id="assignBtn">صرف الرول للطلب</button>
+    <div class="msg" id="assignMsg"></div>
+  </div>
+</section>
+
+<!-- ============ المخزون ============ -->
+<section id="t-stock" class="hide">
+  <div class="stats" id="stats"></div>
+  <div class="card" style="margin-top:14px">
+    <div class="row">
+      <input id="q" placeholder="بحث: رقم الرول، R-، رقم الطلب" style="flex:3">
+      <select id="fst" style="flex:2">
+        <option value="">كل الحالات</option><option value="in_stock">في المستودع</option><option value="assigned">مصروف</option>
+        <option value="installed">مركّب</option><option value="returned">مرتجع</option><option value="damaged">تالف</option>
+      </select>
+    </div>
+    <div style="overflow-x:auto;margin-top:10px"><table><thead><tr><th>الرول</th><th>الحالة</th><th>الطلب</th><th></th></tr></thead><tbody id="list"></tbody></table></div>
+  </div>
+</section>
+
+<!-- ============ الطباعة ============ -->
+<section id="t-print" class="hide">
+  <div class="card">
+    <h2>ملصقات جاهزة للطباعة</h2>
+    <p style="color:var(--mut);margin:0 0 10px;font-size:14px">اطبعها من الكمبيوتر على طابعة 10×15. كل ملصق فيه نصّين: الكبير للكرتون، والصغير يتقص ويتلزق داخل الكور.</p>
+    <div class="row">
+      <button class="btn" id="printBtn">🖨 طباعة المحدد</button>
+      <button class="btn sec" id="markBtn">تعليم المحدد كمطبوع</button>
+    </div>
+    <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="showAll" style="width:auto"> عرض المطبوع من قبل أيضاً</label>
+    <div style="overflow-x:auto;margin-top:6px"><table><thead><tr><th><input type="checkbox" id="selAll" style="width:auto"></th><th>الرول</th><th>الرقم</th><th>طُبع</th></tr></thead><tbody id="plist"></tbody></table></div>
+    <div class="msg" id="printMsg"></div>
+  </div>
+</section>
+</main>
+</div>
+
+<dialog id="dlg"><div class="card" id="dlgBody"></div></dialog>
+<div id="labels"></div>
+
+<script>
+const API = "https://uctvlqcwltpiqabyvchb.supabase.co/functions/v1/rolls";
+const ST = {in_stock:"في المستودع",assigned:"مصروف",installed:"مركّب",returned:"مرتجع",damaged:"تالف"};
+const $ = (s) => document.querySelector(s);
+const store = { get(k){try{return localStorage.getItem(k)}catch(e){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}}, del(k){try{localStorage.removeItem(k)}catch(e){}} };
+let PASS = "", ROLE = "";
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function msg(el, text, kind){ const m = typeof el === "string" ? $(el) : el; m.className = "msg " + kind; m.textContent = text; m.style.display = text ? "block" : "none"; }
+function beep(ok){ try{ const a=new (window.AudioContext||window.webkitAudioContext)(), o=a.createOscillator(), g=a.createGain(); o.frequency.value = ok?880:220; o.connect(g); g.connect(a.destination); g.gain.value=.15; o.start(); setTimeout(()=>{o.stop();a.close()}, ok?120:350);}catch(e){} if(navigator.vibrate) navigator.vibrate(ok?60:[80,60,80]); }
+async function api(action, body={}) {
+  const r = await fetch(API, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({action, password: PASS, ...body})});
+  const j = await r.json().catch(()=>({ok:false,message:"تعذر الاتصال بالخادم."}));
+  if (j.code === "unauthorized" && action !== "login") { logout(); }
+  return j;
+}
+const toLatin = (s) => String(s ?? "").replace(/[٠-٩]/g, d => d.charCodeAt(0)-0x660).replace(/[۰-۹]/g, d => d.charCodeAt(0)-0x6f0);
+function parseCarton(raw){
+  let t = toLatin(raw).toUpperCase().replace(/\s+/g,"");
+  t = t.replace(/^.*?(AVVA|AWA|AVA|A\/VA)/,"AVVA").replace(/[–—_]/g,"-").replace(/,/g,".");
+  const m = /^AVVA-?([0-9OIL]{3,6})[.\-]([0-9OIL]{6,10})-([0-9OIL]{1,5})/.exec(t);
+  if (!m) return null;
+  const fix = s => s.replace(/O/g,"0").replace(/[IL]/g,"1");
+  return { full:`AVVA-${fix(m[1])}.${fix(m[2])}-${fix(m[3]).padStart(3,"0")}`, prefix:`AVVA-${fix(m[1])}.${fix(m[2])}`, seq: fix(m[3]).padStart(3,"0") };
+}
+
+/* ---------- login ---------- */
+async function login(p){
+  PASS = p; const j = await api("login");
+  if (!j.ok) { PASS=""; msg("#loginMsg", j.message || "كلمة المرور غير صحيحة.", "bad"); return; }
+  ROLE = j.role; store.set("avva_rolls_pw", p);
+  $("#login").classList.add("hide"); $("#app").classList.remove("hide"); $("#logout").classList.remove("hide");
+  const pf = store.get("avva_rolls_prefix"); if (pf) $("#prefix").value = pf;
+  if (matchMedia("(pointer:fine)").matches && innerWidth > 900) tab("print");
+}
+function logout(){ PASS=""; store.del("avva_rolls_pw"); location.reload(); }
+$("#loginBtn").onclick = () => login($("#pw").value.trim());
+$("#pw").onkeydown = e => { if (e.key==="Enter") $("#loginBtn").click(); };
+$("#logout").onclick = logout;
+{ const p = store.get("avva_rolls_pw"); if (p) login(p); }
+
+/* ---------- tabs ---------- */
+function tab(t){
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.t===t));
+  ["in","out","stock","print"].forEach(x => $("#t-"+x).classList.toggle("hide", x!==t));
+  stopAll();
+  if (t==="stock") loadStock(); if (t==="print") loadPrint();
+}
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => tab(b.dataset.t));
+
+/* ---------- camera helpers ---------- */
+const streams = {};
+async function openCam(box){
+  const v = box.querySelector("video");
+  const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}, width:{ideal:1920}, height:{ideal:1080}}, audio:false});
+  v.srcObject = s; await v.play(); box.style.display = "block"; streams[box.id] = s; return v;
+}
+function closeCam(box){ const s = streams[box.id]; if (s) s.getTracks().forEach(t=>t.stop()); delete streams[box.id]; box.style.display="none"; box._stop = true; }
+function stopAll(){ document.querySelectorAll(".cam").forEach(closeCam); $("#ocrShot").classList.add("hide"); $("#ocrStop").classList.add("hide"); $("#ocrStart").classList.remove("hide"); }
+
+let zxing = null;
+async function getDetector(){
+  if ("BarcodeDetector" in window) {
+    try { const d = new BarcodeDetector({formats:["qr_code","code_128","code_39","ean_13","data_matrix","itf"]}); return { detect: async (v) => (await d.detect(v)).map(x=>x.rawValue) }; } catch(e){}
+  }
+  if (!zxing) { await new Promise((res,rej)=>{ const s=document.createElement("script"); s.src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); zxing = new ZXing.BrowserMultiFormatReader(); }
+  const c = document.createElement("canvas");
+  return { detect: async (v) => { c.width=v.videoWidth; c.height=v.videoHeight; c.getContext("2d").drawImage(v,0,0); try { const r = zxing.decodeFromCanvas(c); return r ? [r.getText()] : []; } catch(e){ return []; } } };
+}
+async function scanInto(boxSel, onCode){
+  const box = $(boxSel);
+  if (streams[box.id]) { closeCam(box); return; }
+  try {
+    const v = await openCam(box); box._stop = false; const det = await getDetector();
+    const loop = async () => {
+      if (box._stop) return;
+      if (v.readyState >= 2) { const codes = await det.detect(v).catch(()=>[]); if (codes.length) { beep(true); closeCam(box); onCode(codes[0]); return; } }
+      setTimeout(loop, 180);
+    };
+    loop();
+  } catch(e) { alert("ما قدرت أفتح الكاميرا. تأكد إنك سمحت للمتصفح يستخدمها."); }
+}
+
+/* ---------- OCR of ROLL NO ---------- */
+let tess = null;
+async function getTess(){
+  if (tess) return tess;
+  msg("#ocrMsg","جاري تجهيز قارئ الأرقام لأول مرة...","warn");
+  await new Promise((res,rej)=>{ const s=document.createElement("script"); s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"; s.onload=res; s.onerror=rej; document.head.appendChild(s); });
+  tess = await Tesseract.createWorker("eng");
+  await tess.setParameters({ tessedit_char_whitelist:"AVROLNO.:-0123456789 ", tessedit_pageseg_mode:"7" });
+  return tess;
+}
+$("#ocrStart").onclick = async () => {
+  try { await openCam($("#camIn")); $("#ocrStart").classList.add("hide"); $("#ocrShot").classList.remove("hide"); $("#ocrStop").classList.remove("hide"); getTess().then(()=>msg("#ocrMsg","","")).catch(()=>{}); }
+  catch(e){ alert("ما قدرت أفتح الكاميرا. تأكد إنك سمحت للمتصفح يستخدمها."); }
+};
+$("#ocrStop").onclick = stopAll;
+$("#ocrShot").onclick = async () => {
+  const v = $("#camIn video"); if (!v.videoWidth) return;
+  const vw=v.videoWidth, vh=v.videoHeight, el=v.getBoundingClientRect();
+  // map guide box (6%..94% x, 40%..60% y of the displayed element, object-fit:cover) to video pixels
+  const scale = Math.max(el.width/vw, el.height/vh), dw=vw*scale, dh=vh*scale, ox=(dw-el.width)/2, oy=(dh-el.height)/2;
+  const sx=(el.width*0.06+ox)/scale, sy=(el.height*0.38+oy)/scale, sw=(el.width*0.88)/scale, sh=(el.height*0.24)/scale;
+  const c=document.createElement("canvas"); const k = Math.min(3, 1600/sw); c.width=sw*k; c.height=sh*k;
+  const g=c.getContext("2d"); g.filter="grayscale(1) contrast(1.6)"; g.drawImage(v,sx,sy,sw,sh,0,0,c.width,c.height);
+  msg("#ocrMsg","جاري القراءة...","warn"); $("#ocrShot").disabled = true;
+  try {
+    const w = await getTess(); const { data } = await w.recognize(c);
+    const p = parseCarton(data.text);
+    if (p) { $("#carton").value = p.full; $("#prefix").value = p.prefix; $("#seq").value = p.seq; beep(true);
+      msg("#ocrMsg", "قريت: " + p.full + " — تأكد منه واضغط تأكيد وحفظ", "ok"); $("#addBtn").scrollIntoView({behavior:"smooth",block:"center"}); }
+    else { beep(false); msg("#ocrMsg","ما قدرت أقرا الرقم. قرّب الكاميرا وخلّ سطر ROLL NO كامل داخل الإطار، أو اكتب آخر الأرقام يدوي.","bad"); }
+  } catch(e){ msg("#ocrMsg","قارئ الأرقام ما اشتغل، اكتب الرقم يدوي.","bad"); }
+  $("#ocrShot").disabled = false;
+};
+$("#seq").oninput = () => { const pf=$("#prefix").value.trim(), s=toLatin($("#seq").value).replace(/\D/g,""); if (pf && s) { const p=parseCarton(pf+"-"+s); if (p) $("#carton").value = p.full; } };
+$("#innerScan").onclick = () => scanInto("#camInner", code => { $("#inner").value = code; });
+
+const recent = [];
+$("#addBtn").onclick = async () => {
+  const p = parseCarton($("#carton").value);
+  if (!p) { beep(false); msg("#addMsg","رقم الرول غير مكتمل. لازم يكون مثل AVVA-5201.01092026-129","bad"); return; }
+  $("#addBtn").disabled = true;
+  const j = await api("add", { carton_no: p.full, inner_code: $("#inner").value.trim() });
+  $("#addBtn").disabled = false;
+  if (!j.ok) { beep(false); msg("#addMsg", j.message, "bad"); return; }
+  store.set("avva_rolls_prefix", p.prefix);
+  if (j.duplicate) { beep(false); msg("#addMsg", `هذا الرول مسجّل من قبل (${j.roll.code}) — حالته: ${ST[j.roll.status]}`, "warn"); }
+  else { beep(true); msg("#addMsg", `تم ✓ ${j.roll.carton_no} ← ${j.roll.code}`, "ok");
+    recent.unshift(j.roll); $("#recent").innerHTML = recent.slice(0,15).map(r=>`<div><span class="mono">${esc(r.carton_no)}</span><b class="mono">${esc(r.code)}</b></div>`).join(""); }
+  $("#carton").value=""; $("#seq").value=""; $("#inner").value=""; msg("#ocrMsg","","");
+  if (streams["camIn"]) $("#camIn").scrollIntoView({behavior:"smooth",block:"center"}); else $("#seq").focus();
+};
+
+/* ---------- صرف ---------- */
+async function showRoll(key){
+  if (!key) return; const j = await api("get", { roll:key });
+  if (!j.ok) { beep(false); msg("#outRollInfo", j.message, "bad"); return; }
+  const r = j.roll; $("#outRoll").value = r.code;
+  msg("#outRollInfo", `${r.code} · ${r.carton_no} · ${ST[r.status]}${r.order_ref ? " · طلب "+r.order_ref : ""}`, r.status==="in_stock"||r.status==="returned" ? "ok" : "warn");
+}
+$("#outRollScan").onclick = () => scanInto("#camOutRoll", code => showRoll(code));
+$("#outRoll").onchange = () => showRoll($("#outRoll").value.trim());
+$("#outOrderScan").onclick = () => scanInto("#camOutOrder", code => { $("#outOrder").value = toLatin(code).replace(/\D/g,""); });
+async function doAssign(force){
+  const roll=$("#outRoll").value.trim(), order=toLatin($("#outOrder").value).replace(/\D/g,"");
+  if (!roll || !order) { msg("#assignMsg","امسح الرول والفاتورة أول.","bad"); return; }
+  $("#assignBtn").disabled = true; const j = await api("assign", { roll, order, force }); $("#assignBtn").disabled = false;
+  if (j.need_confirm) { if (confirm(j.message + "\n\nاضغط موافق للصرف على كل حال.")) return doAssign(true); return; }
+  if (!j.ok) { beep(false); msg("#assignMsg", j.message, "bad"); return; }
+  beep(true);
+  msg("#assignMsg", `تم الصرف ✓ ${j.roll.code} ← طلب ${j.roll.order_ref}${j.order ? " · "+j.order.customer_name+" ("+(j.order.city||"")+")" : ""}${j.rolls_on_order>1 ? " · عدد الرولات على هذا الطلب: "+j.rolls_on_order : ""}`, "ok");
+  $("#outRoll").value=""; msg("#outRollInfo","","");
+}
+$("#assignBtn").onclick = () => doAssign(false);
+
+/* ---------- المخزون ---------- */
+let qT;
+async function loadStock(){
+  const s = await api("stats");
+  if (s.ok) { const c=s.counts;
+    $("#stats").innerHTML = `<div class="stat main"><b>${c.in_stock}</b><span>في المستودع</span></div><div class="stat"><b>${c.assigned}</b><span>مصروف</span></div><div class="stat"><b>${c.installed}</b><span>مركّب</span></div><div class="stat"><b>${c.returned}</b><span>مرتجع</span></div><div class="stat"><b>${c.damaged}</b><span>تالف</span></div><div class="stat"><b>${s.unprinted}</b><span>بدون ملصق مطبوع</span></div>`; }
+  const j = await api("list", { q: $("#q").value, status: $("#fst").value });
+  $("#list").innerHTML = (j.rows||[]).map(r => `<tr><td><b class="mono">${esc(r.code)}</b><br><small class="mono" style="color:var(--mut)">${esc(r.carton_no)}</small></td><td><span class="pill p-${r.status}">${ST[r.status]}</span></td><td class="mono">${r.order_ref||""}</td><td><button class="btn sec" data-id="${esc(r.code)}" style="padding:6px 10px">إدارة</button></td></tr>`).join("") || `<tr><td colspan="4" style="color:var(--mut)">لا يوجد</td></tr>`;
+  $("#list").querySelectorAll("button").forEach(b => b.onclick = () => manage(b.dataset.id));
+}
+$("#q").oninput = () => { clearTimeout(qT); qT = setTimeout(loadStock, 350); };
+$("#fst").onchange = loadStock;
+async function manage(code){
+  const j = await api("get", { roll: code }); if (!j.ok) return alert(j.message);
+  const r = j.roll;
+  $("#dlgBody").innerHTML = `<h2 class="mono">${esc(r.code)}</h2>
+   <div class="mono">${esc(r.carton_no)}</div>
+   ${r.inner_code ? `<div class="mono" style="color:var(--mut);font-size:13px">لفة: ${esc(r.inner_code)}</div>` : ""}
+   <p><span class="pill p-${r.status}">${ST[r.status]}</span> ${r.order_ref ? " · طلب <b class='mono'>"+r.order_ref+"</b>" : ""}</p>
+   ${j.warranties.length ? `<p>الضمان: ${j.warranties.map(w=>esc(w.cert_no)+" ("+esc(w.status)+")").join("، ")}</p>` : ""}
+   <label>تغيير الحالة</label>
+   <select id="dSt">${Object.entries(ST).map(([k,v])=>`<option value="${k}" ${k===r.status?"selected":""}>${v}</option>`).join("")}</select>
+   <label>ملاحظة</label><input id="dNote" value="${esc(r.note||"")}">
+   <p style="font-size:12px;color:var(--mut)">ملاحظة: "في المستودع" يفك ربط الرول من الطلب.</p>
+   <div class="row" style="margin-top:10px"><button class="btn" id="dSave">حفظ</button><button class="btn sec" id="dPrint">طباعة ملصقه</button><button class="btn sec" id="dClose">إغلاق</button></div>
+   ${ROLE==="admin" && r.status==="in_stock" ? `<button class="btn red w" id="dDel" style="margin-top:8px">حذف (إدخال بالغلط)</button>` : ""}
+   <div style="margin-top:10px;font-size:12px;color:var(--mut)">${(j.log||[]).map(l=>new Date(l.at).toLocaleString("ar-SA")+" — "+esc(l.action)+" "+esc(l.detail||"")).join("<br>")}</div>`;
+  $("#dlg").showModal();
+  $("#dClose").onclick = () => $("#dlg").close();
+  $("#dPrint").onclick = () => { $("#dlg").close(); printLabels([r]); };
+  $("#dSave").onclick = async () => { const x = await api("set_status", { roll: r.code, status: $("#dSt").value, note: $("#dNote").value }); if (!x.ok) return alert(x.message); $("#dlg").close(); loadStock(); };
+  const d = $("#dDel"); if (d) d.onclick = async () => { if (!confirm("حذف "+r.carton_no+" نهائياً؟")) return; const x = await api("delete", { roll: r.code }); if (!x.ok) return alert(x.message); $("#dlg").close(); loadStock(); };
+}
+
+/* ---------- الطباعة ---------- */
+let PROWS = [];
+async function loadPrint(){
+  const j = await api("list", { unprinted: !$("#showAll").checked, limit: 1000 });
+  PROWS = (j.rows||[]).sort((a,b)=>a.carton_no.localeCompare(b.carton_no));
+  $("#plist").innerHTML = PROWS.map((r,i)=>`<tr><td><input type="checkbox" class="pc" data-i="${i}" ${r.printed_at?"":"checked"} style="width:auto"></td><td class="mono"><b>${esc(r.seq||"")}</b> <small style="color:var(--mut)">${esc(r.carton_no)}</small></td><td class="mono">${esc(r.code)}</td><td>${r.printed_at?"✓":""}</td></tr>`).join("") || `<tr><td colspan="4" style="color:var(--mut)">كل الملصقات مطبوعة 👍</td></tr>`;
+}
+$("#showAll").onchange = loadPrint;
+$("#selAll").onchange = e => document.querySelectorAll(".pc").forEach(c => c.checked = e.target.checked);
+const selected = () => [...document.querySelectorAll(".pc:checked")].map(c => PROWS[+c.dataset.i]);
+function qrSvg(text){ const q = qrcode(0,"M"); q.addData(text); q.make(); return q.createSvgTag({cellSize:4, margin:1, scalable:true}); }
+function printLabels(rows){
+  if (!rows.length) { msg("#printMsg","حدد ملصق واحد على الأقل.","bad"); return; }
+  $("#labels").innerHTML = rows.map(r => `<div class="lab">
+    <div class="top">
+      <div class="lb">A<b>VV</b>A CAR</div>
+      <div class="seq">${esc(r.seq||"")}</div>
+      <div class="qr">${qrSvg(r.qr_url)}</div>
+      <div class="full">${esc(r.carton_no)} · ${esc(r.code)}</div>
+      <div class="cap">امسح الرمز للتحقق من أصالة الرول وتسجيل الضمان<br>${esc(r.film)} · avvacar.com</div>
+    </div>
+    <div class="cut"><span>✂ قص والصق داخل الكور</span></div>
+    <div class="core"><div class="qr">${qrSvg(r.qr_url)}</div><div class="t"><div class="lb" style="font-size:4.5mm;letter-spacing:1mm">A<b>VV</b>A CAR</div><div class="s2">${esc(r.seq||"")}</div><div class="full" style="font-size:3mm">${esc(r.code)}</div><div class="cap" style="text-align:right;font-size:2.8mm">امسح للضمان</div></div></div>
+  </div>`).join("");
+  setTimeout(() => window.print(), 300);
+}
+$("#printBtn").onclick = () => printLabels(selected());
+$("#markBtn").onclick = async () => { const ids = selected().map(r=>r.id); if (!ids.length) return; const j = await api("mark_printed", { ids }); msg("#printMsg", j.ok ? `تم تعليم ${j.count} ملصق كمطبوع.` : j.message, j.ok?"ok":"bad"); loadPrint(); };
+window.addEventListener("afterprint", () => { if (!$("#t-print").classList.contains("hide") && selected().length && confirm("طلعت الملصقات تمام؟ أعلّمها كمطبوعة؟")) $("#markBtn").click(); });
+</script>
+</body>
+</html>
