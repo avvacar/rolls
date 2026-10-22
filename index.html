@@ -208,7 +208,12 @@ const store = { get(k){try{return localStorage.getItem(k)}catch(e){return null}}
 let PASS = "", ROLE = "";
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function msg(el, text, kind){ const m = typeof el === "string" ? $(el) : el; m.className = "msg " + kind; m.textContent = text; m.style.display = text ? "block" : "none"; }
-function beep(ok){ try{ const a=new (window.AudioContext||window.webkitAudioContext)(), o=a.createOscillator(), g=a.createGain(); o.frequency.value = ok?880:220; o.connect(g); g.connect(a.destination); g.gain.value=.15; o.start(); setTimeout(()=>{o.stop();a.close()}, ok?120:350);}catch(e){} if(navigator.vibrate) navigator.vibrate(ok?60:[80,60,80]); }
+let AC=null;
+function unlockAudio(){ try{ if(!AC) AC=new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==="suspended") AC.resume(); }catch(e){} }
+document.addEventListener("pointerdown", unlockAudio, {passive:true}); document.addEventListener("keydown", unlockAudio);
+function tone(f,start,dur,vol){ const o=AC.createOscillator(), g=AC.createGain(); o.type="sine"; o.frequency.value=f; o.connect(g); g.connect(AC.destination);
+  const t0=AC.currentTime+start; g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(vol,t0+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur); o.start(t0); o.stop(t0+dur+0.05); }
+function beep(ok){ try{ unlockAudio(); if(AC){ if(ok){ tone(1318,0,0.35,0.6); tone(1760,0.12,0.5,0.5); } else { tone(330,0,0.25,0.6); tone(262,0.28,0.4,0.6); } } }catch(e){} if(navigator.vibrate) navigator.vibrate(ok?80:[120,80,120]); }
 async function api(action, body={}) {
   const r = await fetch(API, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({action, password: PASS, ...body})});
   const j = await r.json().catch(()=>({ok:false,message:"تعذر الاتصال بالخادم."}));
