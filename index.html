@@ -97,6 +97,10 @@ dialog .card{margin:0}
   <button data-t="print">الطباعة</button>
 </nav>
 <main>
+<div class="card" id="stockBar" style="display:flex;gap:10px;align-items:center;justify-content:space-between;padding:12px 16px">
+  <div><div style="font-size:13px;color:var(--mut)">الموجود في المستودع الحين</div><div style="font-size:34px;font-weight:700;line-height:1.1" id="sbIn">—</div></div>
+  <div style="text-align:left"><div style="font-size:13px;color:var(--mut)">مسحت في هذي الجلسة</div><div style="font-size:22px;font-weight:700" id="sbSess">0</div><div style="font-size:13px;color:var(--mut)">طلع للزبائن: <b id="sbOut">—</b></div></div>
+</div>
 
 <!-- ============ إدخال ============ -->
 <section id="t-in">
@@ -212,6 +216,8 @@ function parseCarton(raw){
   return { full:`AVVA-${fix(m[1])}.${fix(m[2])}-${fix(m[3]).padStart(3,"0")}`, prefix:`AVVA-${fix(m[1])}.${fix(m[2])}`, seq: fix(m[3]).padStart(3,"0") };
 }
 
+let SESS=0;
+async function refreshBar(){ const s = await api("stats"); if (s.ok) { $("#sbIn").textContent = s.counts.in_stock; $("#sbOut").textContent = s.counts.assigned + s.counts.installed; } }
 /* ---------- login ---------- */
 async function login(p){
   PASS = p; const j = await api("login");
@@ -219,6 +225,7 @@ async function login(p){
   ROLE = j.role; store.set("avva_rolls_pw", p);
   $("#login").classList.add("hide"); $("#app").classList.remove("hide"); $("#logout").classList.remove("hide");
   const pf = store.get("avva_rolls_prefix"); if (pf) $("#prefix").value = pf;
+  refreshBar();
   if (matchMedia("(pointer:fine)").matches && innerWidth > 900) tab("print");
 }
 function logout(){ PASS=""; store.del("avva_rolls_pw"); location.reload(); }
@@ -316,7 +323,7 @@ $("#addBtn").onclick = async () => {
   store.set("avva_rolls_prefix", p.prefix);
   if (j.duplicate) { beep(false); msg("#addMsg", `هذا الرول مسجّل من قبل (${j.roll.code}) — حالته: ${ST[j.roll.status]}`, "warn"); }
   else { beep(true); msg("#addMsg", `تم ✓ ${j.roll.carton_no} ← ${j.roll.code}`, "ok");
-    recent.unshift(j.roll); $("#recent").innerHTML = recent.slice(0,15).map(r=>`<div><span class="mono">${esc(r.carton_no)}</span><b class="mono">${esc(r.code)}</b></div>`).join(""); }
+    recent.unshift(j.roll); SESS++; $("#sbSess").textContent = SESS; refreshBar(); $("#recent").innerHTML = recent.slice(0,15).map(r=>`<div><span class="mono">${esc(r.carton_no)}</span><b class="mono">${esc(r.code)}</b></div>`).join(""); }
   $("#carton").value=""; $("#seq").value=""; $("#inner").value=""; msg("#ocrMsg","","");
   if (streams["camIn"]) $("#camIn").scrollIntoView({behavior:"smooth",block:"center"}); else $("#seq").focus();
 };
@@ -337,7 +344,7 @@ async function doAssign(force){
   $("#assignBtn").disabled = true; const j = await api("assign", { roll, order, force }); $("#assignBtn").disabled = false;
   if (j.need_confirm) { if (confirm(j.message + "\n\nاضغط موافق للصرف على كل حال.")) return doAssign(true); return; }
   if (!j.ok) { beep(false); msg("#assignMsg", j.message, "bad"); return; }
-  beep(true);
+  beep(true); refreshBar();
   msg("#assignMsg", `تم الصرف ✓ ${j.roll.code} ← طلب ${j.roll.order_ref}${j.order ? " · "+j.order.customer_name+" ("+(j.order.city||"")+")" : ""}${j.rolls_on_order>1 ? " · عدد الرولات على هذا الطلب: "+j.rolls_on_order : ""}`, "ok");
   $("#outRoll").value=""; msg("#outRollInfo","","");
 }
