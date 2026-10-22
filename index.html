@@ -34,7 +34,8 @@ input.ltr{direction:ltr;text-align:left;font-family:ui-monospace,Menlo,monospace
 .cam{position:relative;background:#000;border-radius:12px;overflow:hidden;aspect-ratio:3/4;max-height:72vh;width:100%;display:none}
 #camIn{margin-inline:-8px;width:calc(100% + 16px)}
 .cam video{width:100%;height:100%;object-fit:cover}
-.cam .guide{position:absolute;left:4%;right:4%;top:28%;height:44%;border:2px solid var(--cyan);border-radius:8px;box-shadow:0 0 0 999px rgba(0,0,0,.35)}
+.cam .guide{position:absolute;left:5%;right:5%;top:43%;height:14%;border:3px solid var(--cyan);border-radius:10px;box-shadow:0 0 0 999px rgba(0,0,0,.45)}.cam .guide::after{content:"";position:absolute;left:4%;right:4%;top:50%;height:2px;background:rgba(0,212,255,.7);animation:scanl 1.6s ease-in-out infinite}@keyframes scanl{0%,100%{transform:translateY(-12px)}50%{transform:translateY(12px)}}
+.camtools{position:absolute;top:10px;left:10px;display:flex;gap:8px;z-index:2}.camtools button{background:rgba(10,10,15,.75);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:8px 14px;font:inherit;font-weight:700}.camtools button.on{background:#00d4ff;color:#0a0a0f}
 .cam .hint{position:absolute;bottom:8px;left:0;right:0;text-align:center;color:#fff;font-size:13px}
 .big{font-size:44px;font-weight:700;text-align:center;direction:ltr;margin:6px 0}
 .mono{font-family:ui-monospace,Menlo,monospace;direction:ltr;unicode-bidi:embed}
@@ -106,7 +107,7 @@ dialog .card{margin:0}
 <!-- ============ إدخال ============ -->
 <section id="t-in">
   <div class="card" style="padding:12px">
-    <div class="cam" id="camIn"><video playsinline muted></video><div class="guide"></div><div class="hint" id="camHint" style="font-size:15px;font-weight:700">وجّه الكاميرا على ملصق الكرتون</div></div>
+    <div class="cam" id="camIn"><video playsinline muted></video><div class="guide"></div><div class="camtools"><button id="torchBtn" class="hide" type="button">🔦 فلاش</button><button id="zoomBtn" class="hide" type="button">🔍 تقريب</button></div><div class="hint" id="camHint" style="font-size:15px;font-weight:700">خلّ سطر ROLL NO داخل الإطار</div></div>
     <button class="btn w" id="ocrStart" style="font-size:20px;padding:18px">📷 ابدأ المسح</button>
     <button class="btn sec w hide" id="ocrStop" style="margin-top:8px">إيقاف</button>
     <button class="hide" id="ocrShot"></button>
@@ -267,8 +268,21 @@ document.querySelectorAll("nav button").forEach(b => b.onclick = () => tab(b.dat
 const streams = {};
 async function openCam(box){
   const v = box.querySelector("video");
-  const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}, width:{ideal:1920}, height:{ideal:1080}}, audio:false});
-  v.srcObject = s; await v.play(); box.style.display = "block"; streams[box.id] = s; return v;
+  const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}, width:{ideal:1920}, height:{ideal:1080}, frameRate:{ideal:30}}, audio:false});
+  v.srcObject = s; await v.play(); box.style.display = "block"; streams[box.id] = s;
+  try {
+    const tr = s.getVideoTracks()[0], cap = tr.getCapabilities ? tr.getCapabilities() : {};
+    const adv = [];
+    if (cap.focusMode && cap.focusMode.includes("continuous")) adv.push({focusMode:"continuous"});
+    if (cap.exposureMode && cap.exposureMode.includes("continuous")) adv.push({exposureMode:"continuous"});
+    if (adv.length) await tr.applyConstraints({advanced:adv}).catch(()=>{});
+    if (box.id === "camIn") {
+      const tb=$("#torchBtn"), zb=$("#zoomBtn");
+      if (cap.torch) { tb.classList.remove("hide"); tb.classList.remove("on"); tb.onclick = async () => { const on=!tb.classList.contains("on"); await tr.applyConstraints({advanced:[{torch:on}]}).catch(()=>{}); tb.classList.toggle("on", on); }; }
+      if (cap.zoom && cap.zoom.max > 1) { zb.classList.remove("hide"); const z2=Math.min(2, cap.zoom.max); zb.onclick = async () => { const on=!zb.classList.contains("on"); await tr.applyConstraints({advanced:[{zoom: on ? z2 : (cap.zoom.min||1)}]}).catch(()=>{}); zb.classList.toggle("on", on); }; }
+    }
+  } catch(e){}
+  return v;
 }
 function closeCam(box){ const s = streams[box.id]; if (s) s.getTracks().forEach(t=>t.stop()); delete streams[box.id]; box.style.display="none"; box._stop = true; }
 function stopAll(){ document.querySelectorAll(".cam").forEach(closeCam); $("#ocrShot").classList.add("hide"); $("#ocrStop").classList.add("hide"); $("#ocrStart").classList.remove("hide"); }
@@ -297,14 +311,15 @@ async function scanInto(boxSel, onCode){
 }
 
 /* ---------- OCR of ROLL NO ---------- */
-let tess = null;
+let tess = null, TESS_N = 1;
 async function getTess(){
   if (tess) return tess;
   msg("#ocrMsg","جاري تجهيز قارئ الأرقام لأول مرة...","warn");
   await new Promise((res,rej)=>{ const s=document.createElement("script"); s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"; s.onload=res; s.onerror=rej; document.head.appendChild(s); });
-  tess = await Tesseract.createWorker("eng");
-  await tess.setParameters({ tessedit_char_whitelist:"AVROLNO.:-0123456789 ", tessedit_pageseg_mode:"11" });
-  return tess;
+  const sch = Tesseract.createScheduler();
+  TESS_N = (navigator.hardwareConcurrency||2) >= 6 ? 2 : 1;
+  for (let i=0;i<TESS_N;i++){ const w = await Tesseract.createWorker("eng"); await w.setParameters({ tessedit_char_whitelist:"AVROLN0123456789.-: ", tessedit_pageseg_mode:"7", preserve_interword_spaces:"0" }); sch.addWorker(w); }
+  tess = sch; return tess;
 }
 let SCAN_ON=false, lastRead="", readCount=0, lastSaved="", lastSavedAt=0;
 $("#ocrStart").onclick = async () => {
@@ -322,34 +337,47 @@ function grabGuide(){
   const v = $("#camIn video"); if (!v.videoWidth) return null;
   const vw=v.videoWidth, vh=v.videoHeight, el=v.getBoundingClientRect();
   const scale = Math.max(el.width/vw, el.height/vh), dw=vw*scale, dh=vh*scale, ox=(dw-el.width)/2, oy=(dh-el.height)/2;
-  const sx=(el.width*0.04+ox)/scale, sy=(el.height*0.28+oy)/scale, sw=(el.width*0.92)/scale, sh=(el.height*0.44)/scale;
-  const c=document.createElement("canvas"); const k=Math.min(2.5, 1400/sw); c.width=sw*k; c.height=sh*k;
-  const g=c.getContext("2d"); g.filter="grayscale(1) contrast(1.6)"; g.drawImage(v,sx,sy,sw,sh,0,0,c.width,c.height); return c;
+  const sx=(el.width*0.05+ox)/scale, sy=(el.height*0.43+oy)/scale, sw=(el.width*0.90)/scale, sh=(el.height*0.14)/scale;
+  const H=90, W=Math.round(sw*H/sh), c=document.createElement("canvas"); c.width=W; c.height=H;
+  const g=c.getContext("2d",{willReadFrequently:true}); g.drawImage(v,sx,sy,sw,sh,0,0,W,H);
+  const im=g.getImageData(0,0,W,H), d=im.data; let sum=0;
+  for (let i=0;i<d.length;i+=4){ const y=(d[i]*299+d[i+1]*587+d[i+2]*114)/1000; d[i]=y; sum+=y; }
+  const mean=sum/(W*H), thr=mean*0.78;
+  for (let i=0;i<d.length;i+=4){ const y=d[i]<thr?0:255; d[i]=d[i+1]=d[i+2]=y; }
+  g.putImageData(im,0,0); return c;
+}
+// read a roll number from OCR text; with a known shipment prefix only the last digits must be right
+function readRoll(text){
+  const s = toLatin(text).toUpperCase().replace(/[OQ]/g,"0").replace(/[IL|]/g,"1").replace(/\s+/g,"");
+  const full = parseCarton(s); if (full) return full;
+  const m = /(\d{3,6})[.,:]?(\d{8})[-–—]?(\d{1,4})(?!\d)/.exec(s);
+  if (m) return parseCarton(`AVVA-${m[1]}.${m[2]}-${m[3]}`);
+  return null;
 }
 async function scanLoop(){
-  while (SCAN_ON && streams["camIn"]) {
-    const c = grabGuide();
-    if (c) {
-      try {
-        const { data } = await tess.recognize(c);
-        const p = parseCarton(data.text.replace(/\n/g," "));
-        if (p) {
-          if (p.full === lastRead) readCount++; else { lastRead = p.full; readCount = 1; }
-          hint("قريت " + p.seq + " …");
-          const recentSame = p.full === lastSaved && Date.now()-lastSavedAt < 8000;
-          const knownPf = store.get("avva_rolls_prefix"); const need = (!knownPf || knownPf === p.prefix) ? 1 : 2;
-          if (readCount >= need && !recentSame) {
-            lastSaved = p.full; lastSavedAt = Date.now();
-            $("#carton").value = p.full; $("#prefix").value = p.prefix; $("#seq").value = p.seq;
-            await saveRoll(); hint("✓ " + p.seq + " — حرّك الكاميرا على الكرتون اللي بعده");
-            await new Promise(r=>setTimeout(r,900));
-          }
-        } else { readCount = 0; hint("وجّه الكاميرا على ملصق الكرتون (الباركود وسطر ROLL NO)"); }
-      } catch(e){}
+  const lane = async () => {
+    while (SCAN_ON && streams["camIn"]) {
+      const c = grabGuide();
+      if (!c) { await new Promise(r=>setTimeout(r,60)); continue; }
+      let p = null;
+      try { const { data } = await tess.addJob("recognize", c); p = readRoll(data.text); } catch(e){}
+      if (!SCAN_ON) return;
+      if (p) {
+        if (p.full === lastRead) readCount++; else { lastRead = p.full; readCount = 1; }
+        const recentSame = p.full === lastSaved && Date.now()-lastSavedAt < 6000;
+        const knownPf = store.get("avva_rolls_prefix"); const need = (!knownPf || knownPf === p.prefix) ? 1 : 2;
+        if (readCount >= need && !recentSame && !SAVING) {
+          SAVING = true; lastSaved = p.full; lastSavedAt = Date.now();
+          $("#carton").value = p.full; $("#prefix").value = p.prefix; $("#seq").value = p.seq;
+          await saveRoll(); SAVING = false;
+          hint("✓ " + p.seq + " — الكرتون اللي بعده");
+        } else if (!recentSame) hint("قريت " + p.seq + " …");
+      } else hint("خلّ سطر ROLL NO داخل الإطار");
     }
-    await new Promise(r=>setTimeout(r,250));
-  }
+  };
+  for (let i=0;i<TESS_N;i++) lane();
 }
+let SAVING = false;
 $("#seq").oninput = () => { const pf=$("#prefix").value.trim(), s=toLatin($("#seq").value).replace(/\D/g,""); if (pf && s) { const p=parseCarton(pf+"-"+s); if (p) $("#carton").value = p.full; } };
 $("#seq").onkeydown = e => { if (e.key==="Enter") { e.preventDefault(); saveRoll(); } };
 $("#innerScan").onclick = () => scanInto("#camInner", code => { $("#inner").value = code; });
