@@ -453,7 +453,7 @@ function printLabels0(rows){
   msg("#printMsg","انفتحت صفحة الملصقات في تبويب جديد مع أمر الطباعة. بعد ما تطبع ارجع هنا واضغط \"تعليم المحدد كمطبوع\".","ok");
 }
 function labelsHtml(rows){
-  const lab = r => { const u = `${r.qr_url}`; return `<div class="lab"><div class="top"><div class="lb">A<b>VV</b>A CAR</div><div class="seq">${esc(seqOf(r))}</div><div class="qr">${qrSvg(u)}</div><div class="code">رقم الرول للضمان: <span>${esc(r.code)}</span></div><div class="full">${esc(cartonOf(r))}</div><div class="cap">امسح الرمز أو اكتب رقم الرول في صفحة الضمان · warranty.avvacar.com</div></div><div class="cut"><span>✂ قص والصق داخل الكور</span></div><div class="core"><div class="qr">${qrSvg(u)}</div><div class="t"><div class="lb sm">A<b>VV</b>A CAR</div><div class="c2">${esc(r.code)}</div><div class="cap">رقم الرول للضمان</div></div></div></div>`; };
+  const lab = r => { const u = `${r.qr_url}`; return `<div class="lab"><div class="top"><div class="lb">A<b>VV</b>A CAR</div><div class="seq">${esc(r.code)}</div><div class="qr">${qrSvg(u)}</div><div class="code">رقم الرول للضمان: <span>${esc(r.code)}</span></div><div class="trust">رول أصلي موثّق ومشمول بضمان A<b>VV</b>A CAR الرسمي</div><div class="cap">امسح الرمز أو اكتب رقم الرول في صفحة الضمان · warranty.avvacar.com</div></div><div class="cut"><span>✂ قص والصق داخل الكور${r.seq ? " · كرتون "+esc(r.seq) : ""}</span></div><div class="core"><div class="qr">${qrSvg(u)}</div><div class="t"><div class="lb sm">A<b>VV</b>A CAR</div><div class="c2">${esc(r.code)}</div><div class="cap">رقم الرول للضمان</div></div></div></div>`; };
   return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>ملصقات رولات AVVA</title><style>
 @page{size:100mm 150mm;margin:0}*{box-sizing:border-box}body{margin:0;font-family:Tahoma,"Segoe UI",Arial,sans-serif;color:#000;background:#fff}
 .hint{font:14px Tahoma;padding:10px;background:#e3f6fa}@media print{.hint{display:none}}
@@ -462,7 +462,7 @@ function labelsHtml(rows){
 .lb{font-weight:700;letter-spacing:1.5mm;font-size:7mm;direction:ltr}.lb b{color:#00b5d9}.lb.sm{font-size:4.5mm;letter-spacing:1mm}
 .seq{font-size:13mm;font-weight:700;line-height:1;direction:ltr}.qr svg{width:42mm;height:42mm;display:block}
 .code{font-size:4.2mm;font-weight:700}.code span{font-family:Consolas,monospace;direction:ltr;unicode-bidi:isolate;font-size:5.5mm}
-.full{font-family:Consolas,monospace;font-size:3.2mm;direction:ltr}.cap{font-size:3mm;text-align:center}
+.full{font-family:Consolas,monospace;font-size:3.2mm;direction:ltr}.trust{font-size:3.6mm;font-weight:700;text-align:center}.trust b{color:#00b5d9}.cap{font-size:3mm;text-align:center}
 .cut{border-top:.4mm dashed #000;text-align:center;font-size:2.6mm;line-height:0;margin:1.5mm 0}.cut span{background:#fff;padding:0 2mm}
 .core{border:.6mm solid #000;border-radius:3mm;padding:2.5mm;height:36mm;display:flex;align-items:center;gap:3mm;direction:ltr}
 .core .qr svg{width:30mm;height:30mm}.core .t{direction:rtl;text-align:right;flex:1}.c2{font-family:Consolas,monospace;font-size:7mm;font-weight:700;direction:ltr;text-align:right}.core .cap{text-align:right}
