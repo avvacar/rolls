@@ -180,7 +180,8 @@ dialog .card{margin:0}
     <h2>ملصقات جاهزة للطباعة</h2>
     <p style="color:var(--mut);margin:0 0 10px;font-size:14px">اطبعها من الكمبيوتر على طابعة 10×15. كل ملصق فيه نصّين: الكبير للكرتون، والصغير يتقص ويتلزق داخل الكور.</p>
     <div class="row">
-      <button class="btn" id="printBtn">🖨 طباعة المحدد</button>
+      <button class="btn" id="pdfBtn">⬇ حفظ PDF</button>
+      <button class="btn sec" id="printBtn">🖨 طباعة مباشرة</button>
       <button class="btn sec" id="markBtn">تعليم المحدد كمطبوع</button>
     </div>
     <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="showAll" style="width:auto"> عرض المطبوع من قبل أيضاً</label>
@@ -205,9 +206,11 @@ function msg(el, text, kind){ const m = typeof el === "string" ? $(el) : el; m.c
 let AC=null;
 function unlockAudio(){ try{ if(!AC) AC=new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==="suspended") AC.resume(); }catch(e){} }
 document.addEventListener("pointerdown", unlockAudio, {passive:true}); document.addEventListener("keydown", unlockAudio);
-function tone(f,start,dur,vol){ const o=AC.createOscillator(), g=AC.createGain(); o.type="sine"; o.frequency.value=f; o.connect(g); g.connect(AC.destination);
-  const t0=AC.currentTime+start; g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(vol,t0+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur); o.start(t0); o.stop(t0+dur+0.05); }
-function beep(ok){ try{ unlockAudio(); if(AC){ if(ok){ tone(1318,0,0.35,0.6); tone(1760,0.12,0.5,0.5); } else { tone(330,0,0.25,0.6); tone(262,0.28,0.4,0.6); } } }catch(e){} if(navigator.vibrate) navigator.vibrate(ok?80:[120,80,120]); }
+let MASTER=null;
+function out(){ if(!MASTER){ const c=AC.createDynamicsCompressor(); c.threshold.value=-30; c.knee.value=10; c.ratio.value=12; const g=AC.createGain(); g.gain.value=2.2; c.connect(g); g.connect(AC.destination); MASTER=c; } return MASTER; }
+function tone(f,start,dur,vol,type){ const o=AC.createOscillator(), g=AC.createGain(); o.type=type||"triangle"; o.frequency.value=f; o.connect(g); g.connect(out());
+  const t0=AC.currentTime+start; g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(vol,t0+0.008); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur); o.start(t0); o.stop(t0+dur+0.05); }
+function beep(ok){ try{ unlockAudio(); if(AC){ if(ok){ tone(1568,0,0.45,1,"square"); tone(1568*2,0,0.3,0.4); tone(2093,0.15,0.6,1,"square"); tone(2637,0.3,0.7,0.8); } else { tone(220,0,0.3,1,"square"); tone(180,0.32,0.45,1,"square"); } } }catch(e){} if(navigator.vibrate) navigator.vibrate(ok?150:[200,100,200]); }
 async function api(action, body={}) {
   const r = await fetch(API, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({action, password: PASS, ...body})});
   const j = await r.json().catch(()=>({ok:false,message:"تعذر الاتصال بالخادم."}));
@@ -466,6 +469,35 @@ function labelsHtml(rows){
 </style></head><body><div class="hint">اطبع بحجم 100×150 مم وبدون هوامش (Margins: None) وبمقياس 100%.</div>${rows.map(lab).join("")}<script>setTimeout(()=>print(),400)<\/script></body></html>`;
 }
 $("#printBtn").onclick = () => printLabels(selected());
+function loadScript(src){ return new Promise((res,rej)=>{ if (document.querySelector('script[src="'+src+'"]')) return res(); const s=document.createElement("script"); s.src=src; s.onload=res; s.onerror=()=>rej(new Error("تعذر تحميل مكتبة PDF، تأكد من الإنترنت.")); document.head.appendChild(s); }); }
+async function saveLabelsPdf(rows){
+  if (!rows.length) { msg("#printMsg","حدد ملصق واحد على الأقل من القائمة تحت (حط عليه صح ✓).","bad"); return; }
+  $("#pdfBtn").disabled = true;
+  try {
+    msg("#printMsg","جاري تجهيز ملف PDF... (0/"+rows.length+")","warn");
+    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+    const H2C = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+    const html = labelsHtml(rows).replace(/<script>setTimeout\(\(\)=>print\(\),400\)<\/script>/,"").replace('<div class="hint">','<div class="hint" style="display:none">').replace("</head>",'<script src="'+H2C+'"><\/script></head>');
+    const fr = document.createElement("iframe"); fr.style.cssText="position:fixed;left:-10000px;top:0;width:420px;height:640px;border:0"; document.body.appendChild(fr);
+    await new Promise(r=>{ fr.onload=r; fr.srcdoc=html; });
+    for (let i=0;i<50 && !fr.contentWindow.html2canvas;i++) await new Promise(r=>setTimeout(r,100));
+    if (!fr.contentWindow.html2canvas) throw new Error("تعذر تحميل مكتبة PDF، تأكد من الإنترنت.");
+    const pdf = new jspdf.jsPDF({ unit:"mm", format:[100,150], orientation:"portrait" });
+    const labs = fr.contentDocument.querySelectorAll(".lab");
+    for (let i=0;i<labs.length;i++){
+      const c = await fr.contentWindow.html2canvas(labs[i], { scale:3, backgroundColor:"#ffffff" });
+      if (i) pdf.addPage([100,150],"portrait");
+      pdf.addImage(c.toDataURL("image/png"), "PNG", 0, 0, 100, 150);
+      msg("#printMsg","جاري تجهيز ملف PDF... ("+(i+1)+"/"+rows.length+")","warn");
+    }
+    fr.remove();
+    pdf.save("AVVA-labels-"+new Date().toISOString().slice(0,10)+"-"+rows.length+".pdf");
+    msg("#printMsg","تم ✓ نزل ملف PDF فيه "+rows.length+" ملصق. افتحه واطبعه على طابعة 10×15 بمقياس 100%. وبعد الطباعة اضغط \"تعليم المحدد كمطبوع\".","ok");
+  } catch(e){ msg("#printMsg", e.message || "تعذر إنشاء PDF.", "bad"); }
+  $("#pdfBtn").disabled = false;
+}
+$("#pdfBtn").onclick = () => saveLabelsPdf(selected());
+
 $("#markBtn").onclick = async () => { const ids = selected().map(r=>r.id); if (!ids.length) return; const j = await api("mark_printed", { ids }); msg("#printMsg", j.ok ? `تم تعليم ${j.count} ملصق كمطبوع.` : j.message, j.ok?"ok":"bad"); loadPrint(); };
 </script>
 </body>
