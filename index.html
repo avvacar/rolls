@@ -385,7 +385,8 @@ $("#blankBtn").onclick = async () => {
 const seqOf = r => r.seq || r.code;
 const cartonOf = r => String(r.carton_no||"").startsWith("NL-") ? "بدون ملصق مصنع" : r.carton_no;
 /* ---------- صرف ---------- */
-async function showRoll(key){
+function rollKey(k){ const m=/[?&](?:t|roll)=([A-Za-z0-9_-]{8,40})/.exec(String(k||"")); return m ? m[1] : String(k||"").trim(); }
+async function showRoll(key){ key = rollKey(key);
   if (!key) return; const j = await api("get", { roll:key });
   if (!j.ok) { beep(false); msg("#outRollInfo", j.message, "bad"); return; }
   const r = j.roll; $("#outRoll").value = r.code;
@@ -395,7 +396,7 @@ $("#outRollScan").onclick = () => scanInto("#camOutRoll", code => showRoll(code)
 $("#outRoll").onchange = () => showRoll($("#outRoll").value.trim());
 $("#outOrderScan").onclick = () => scanInto("#camOutOrder", code => { $("#outOrder").value = toLatin(code).replace(/\D/g,""); });
 async function doAssign(force){
-  const roll=$("#outRoll").value.trim(), order=toLatin($("#outOrder").value).replace(/\D/g,"");
+  const roll=rollKey($("#outRoll").value), order=toLatin($("#outOrder").value).replace(/\D/g,"");
   if (!roll || !order) { msg("#assignMsg","امسح الرول والفاتورة أول.","bad"); return; }
   $("#assignBtn").disabled = true; const j = await api("assign", { roll, order, force }); $("#assignBtn").disabled = false;
   if (j.need_confirm) { if (confirm(j.message + "\n\nاضغط موافق للصرف على كل حال.")) return doAssign(true); return; }
@@ -415,7 +416,7 @@ async function barcodeSvg(val){
   return s.outerHTML;
 }
 async function orderLabelHtml(o){
-  const bc = await barcodeSvg(o.order), rbc = await barcodeSvg(o.roll.carton_no), qr = qrSvg(o.roll.qr_url);
+  const bc = await barcodeSvg(o.order), rbc = await barcodeSvg(o.roll.carton_no), qr = qrBrand(VURL(o.roll.token));
   return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>ملصق طلب ${esc(o.order)}</title><style>
 @page{size:100mm 150mm;margin:0}*{box-sizing:border-box}body{margin:0;font-family:Tahoma,"Segoe UI",Arial,sans-serif;color:#000;background:#fff}
 .lab{width:100mm;height:150mm;padding:5mm;display:flex;flex-direction:column;gap:3mm;overflow:hidden}
@@ -424,7 +425,7 @@ async function orderLabelHtml(o){
 .k{font-size:3.4mm;color:#333}.ord{font-family:Consolas,monospace;font-size:11mm;font-weight:700;direction:ltr;line-height:1}
 .bc svg{width:80mm;height:16mm;display:block}.cust{font-size:4.2mm;font-weight:700;text-align:center}
 .roll{flex:1;justify-content:space-between}.rn{font-family:Consolas,monospace;font-size:5.4mm;font-weight:700;direction:ltr;white-space:nowrap}
-.qr svg{width:30mm;height:30mm;display:block}.roll .bc svg{width:84mm;height:13mm}.trust{font-size:3.4mm;font-weight:700;text-align:center}.trust b{color:#00b5d9}.cap{font-size:2.9mm;text-align:center}
+.qrb{position:relative;width:30mm;height:30mm}.qrb svg{width:30mm;height:30mm;display:block}.qrm{position:absolute;left:50%;top:50%;width:7.2mm;height:8.4mm;transform:translate(-50%,-50%)}.qr .qrm svg{width:100%;height:100%}.qr svg{width:30mm;height:30mm;display:block}.roll .bc svg{width:84mm;height:13mm}.trust{font-size:3.4mm;font-weight:700;text-align:center}.trust b{color:#00b5d9}.cap{font-size:2.9mm;text-align:center}
 </style></head><body><div class="lab">
 <div class="box"><div class="lb">A<b>VV</b>A CAR</div><div class="k">رقم الطلب</div><div class="ord">${esc(o.order)}</div><div class="bc">${bc}</div>${o.customer?`<div class="cust">${esc(o.customer)}${o.city?" · "+esc(o.city):""}</div>`:""}</div>
 <div class="box roll"><div class="k">رقم الرول للضمان</div><div class="rn">${esc(o.roll.carton_no)}</div><div class="bc">${rbc}</div><div class="qr">${qr}</div><div class="trust">رول أصلي موثّق ومشمول بضمان A<b>VV</b>A CAR الرسمي</div><div class="cap">امسح الرمز أو اكتب رقم الرول في صفحة الضمان · warranty.avvacar.com</div></div>
@@ -488,13 +489,14 @@ function printLabels0(rows){
   labelsHtml(rows).then(h => { w.document.open(); w.document.write(h); w.document.close(); });
   msg("#printMsg","انفتحت صفحة الملصقات في تبويب جديد مع أمر الطباعة. بعد ما تطبع ارجع هنا واضغط \"تعليم المحدد كمطبوع\".","ok");
 }
+const VURL = tok => "https://avvacar.github.io/rolls/r.html?t=" + tok;
 const AVVA_MARK = `<svg viewBox="0 0 100 116" xmlns="http://www.w3.org/2000/svg"><polygon points="50,3 97,30 97,86 50,113 3,86 3,30" fill="#fff" stroke="#000" stroke-width="6"/><path d="M22 34 L47 70 L72 34" fill="none" stroke="#000" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path d="M47 70 L47 96" fill="none" stroke="#000" stroke-width="5"/></svg>`;
 const AVVA_WM = `<svg viewBox="0 0 100 116" xmlns="http://www.w3.org/2000/svg"><polygon points="50,3 97,30 97,86 50,113 3,86 3,30" fill="none" stroke="#000" stroke-width="1.2"/><polygon points="50,12 89,35 89,81 50,104 11,81 11,35" fill="none" stroke="#000" stroke-width=".6"/><path d="M22 34 L47 70 L72 34" fill="none" stroke="#000" stroke-width="1.4"/><path d="M47 70 L47 96" fill="none" stroke="#000" stroke-width=".8"/></svg>`;
 function qrBrand(text){ const q=qrcode(0,"H"); q.addData(text); q.make(); return `<div class="qrb">${q.createSvgTag({cellSize:4,margin:1,scalable:true})}<div class="qrm">${AVVA_MARK}</div></div>`; }
 const MICRO = n => `<div class="micro">${Array(n*3).fill("AVVA CAR ◆ GENUINE ◆").join(" ")}</div>`;
 async function labelsHtml(rows){
   const bcs = {}; for (const r of rows) bcs[r.carton_no] = await barcodeSvg(r.carton_no);
-  const lab = r => { const u = `${r.qr_url}`; return `<div class="lab"><div class="top"><div class="wm">${AVVA_WM}</div><div class="lb">A<b>VV</b>A CAR</div><div class="seq num">${esc(r.carton_no)}</div><div class="bcw"><div class="rbc">${bcs[r.carton_no]}</div>${MICRO(4)}<div class="code">رقم الرول المعتمد لتفعيل ضمانك</div></div><div class="act">فعّل ضمانك من هنا<span>▼</span></div><div class="qr">${qrBrand(u)}</div><div class="trust">رول أصلي موثّق ومشمول بضمان A<b>VV</b>A CAR الرسمي</div><div class="cap">ما فتح معك الرمز؟ ادخل مباشرة على موقع الضمان<b>warranty.avvacar.com</b></div></div><div class="cut"><span>✂ قص والصق داخل الكور</span></div><div class="core"><div class="bcw"><div class="rbc">${bcs[r.carton_no]}</div>${MICRO(4)}</div><div class="crow"><div class="cm">${AVVA_MARK}</div><div class="c2 num">${esc(r.carton_no)}</div></div></div></div>`; };
+  const lab = r => { const u = VURL(r.token); return `<div class="lab"><div class="top"><div class="wm">${AVVA_WM}</div><div class="lb">A<b>VV</b>A CAR</div><div class="seq num">${esc(r.carton_no)}</div><div class="bcw"><div class="rbc">${bcs[r.carton_no]}</div>${MICRO(4)}<div class="code">رقم الرول المعتمد لتفعيل ضمانك</div></div><div class="act">فعّل ضمانك من هنا<span>▼</span></div><div class="qr">${qrBrand(u)}</div><div class="trust">رول أصلي موثّق ومشمول بضمان A<b>VV</b>A CAR الرسمي</div><div class="cap">ما فتح معك الرمز؟ ادخل مباشرة على موقع الضمان<b>warranty.avvacar.com</b></div></div><div class="cut"><span>✂ قص والصق داخل الكور</span></div><div class="core"><div class="bcw"><div class="rbc">${bcs[r.carton_no]}</div>${MICRO(4)}</div><div class="crow"><div class="cm">${AVVA_MARK}</div><div class="c2 num">${esc(r.carton_no)}</div></div></div></div>`; };
   return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>ملصقات رولات AVVA</title><style>
 @page{size:100mm 150mm;margin:0}*{box-sizing:border-box}body{margin:0;font-family:Tahoma,"Segoe UI",Arial,sans-serif;color:#000;background:#fff}
 .hint{font:14px Tahoma;padding:10px;background:#e3f6fa}@media print{.hint{display:none}}
@@ -506,7 +508,7 @@ async function labelsHtml(rows){
 .act{display:flex;flex-direction:column;align-items:center;font-size:3.3mm;font-weight:700;line-height:1.2}.act span{font-size:2.6mm;margin-top:.4mm}.bcw .code{margin-top:1.2mm;font-size:3.6mm;font-weight:700}.trust{font-size:3.4mm;font-weight:700;text-align:center}.trust b{color:#00b5d9}.cap{font-size:2.8mm;text-align:center}.top .cap{display:flex;flex-direction:column;align-items:center;gap:.4mm;font-size:3mm}.top .cap b{font-family:Consolas,monospace;font-size:3.6mm;direction:ltr;letter-spacing:.1mm}
 .top{position:relative}.top>*{position:relative}.top .wm{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.07;pointer-events:none}.top .wm svg{width:78mm;height:90mm}
 .bcw{display:flex;flex-direction:column;align-items:center}.micro{width:84mm;overflow:hidden;white-space:nowrap;font-family:Consolas,monospace;font-size:1.25mm;line-height:1.5;letter-spacing:.12mm;text-align:center;color:#000;direction:ltr}
-.qrb{position:relative;width:30mm;height:30mm}.qrb svg{width:30mm;height:30mm;display:block}.qrm{position:absolute;left:50%;top:50%;width:7.2mm;height:8.4mm;transform:translate(-50%,-50%)}.qrm svg{width:100%;height:100%;display:block}
+.qrb{position:relative;width:30mm;height:30mm}.qrb svg{width:30mm;height:30mm;display:block}.qrm{position:absolute;left:50%;top:50%;width:7.2mm;height:8.4mm;transform:translate(-50%,-50%)}.qr .qrm svg{width:100%;height:100%;display:block}
 .cm svg{width:5mm;height:5.8mm;display:block}
 .cut{border-top:.4mm dashed #000;text-align:center;font-size:2.6mm;line-height:0;margin:1.5mm 0}.cut span{background:#fff;padding:0 2mm}
 .core{border:.6mm solid #000;border-radius:3mm;padding:2.5mm;height:30mm;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2mm}

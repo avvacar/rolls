@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>أصالة رول AVVA CAR</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0a0a0f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* AVVA CAR brand world: Void Black / Ice White / Cyan, Gold reserved for the authenticity seal */
+:root{
+  --void:#0a0a0f; --navy:#12121e; --mid:#1a1a2e; --line:#262a3d; --ice:#f0f4f8; --steel:#8890aa; --dim:#5d6480;
+  --cyan:#00d4ff; --cyan-d:#009ab8; --gold:#c8a84b; --gold-l:#e6cf86; --ok:#00e0b0; --bad:#ff7a7a;
+  --f-ar:"Cairo","Segoe UI",Tahoma,sans-serif; --f-en:"Barlow Condensed","Cairo",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--void);color:var(--ice);font-family:var(--f-ar);-webkit-font-smoothing:antialiased}
+body{min-height:100vh;padding:env(safe-area-inset-top,0) max(16px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0) max(16px,env(safe-area-inset-left,0px));
+  background:
+   radial-gradient(120% 60% at 50% -10%, rgba(0,212,255,.10), transparent 60%),
+   url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='64' viewBox='0 0 56 64'%3E%3Cpolygon points='28,2 54,17 54,47 28,62 2,47 2,17' fill='none' stroke='%23ffffff' stroke-opacity='.035' stroke-width='1'/%3E%3C/svg%3E"),
+   var(--void)}
+.wrap{max-width:480px;margin:0 auto;padding-block:22px 40px;display:flex;flex-direction:column;gap:18px}
+.en{font-family:var(--f-en);letter-spacing:.04em}
+.mono{font-family:var(--f-en);direction:ltr;unicode-bidi:isolate}
+
+header{display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px;direction:ltr}
+.brand svg{width:30px;height:35px}
+.wordmark{font-family:var(--f-en);font-weight:700;font-size:22px;letter-spacing:.22em}
+.wordmark b{color:var(--cyan);font-weight:700}
+.tag{font-family:var(--f-en);font-size:12px;letter-spacing:.24em;color:var(--steel)}
+
+.hero{position:relative;border-radius:22px;padding:30px 20px 24px;text-align:center;overflow:hidden;
+  background:linear-gradient(180deg,var(--navy),var(--void));border:1px solid var(--line)}
+.hero::before{content:"";position:absolute;inset:0;background:radial-gradient(60% 50% at 50% 30%,rgba(200,168,75,.16),transparent 70%);pointer-events:none}
+.seal{position:relative;width:148px;height:170px;margin:0 auto 14px}
+.seal svg{width:100%;height:100%;overflow:visible}
+.seal .ring{stroke-dasharray:420;stroke-dashoffset:420;animation:draw 1.4s .2s cubic-bezier(.6,.1,.2,1) forwards}
+.seal .tick{stroke-dasharray:80;stroke-dashoffset:80;animation:draw .6s 1.3s ease-out forwards}
+.seal .glow{animation:pulse 3.2s 1.8s ease-in-out infinite}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes pulse{0%,100%{opacity:.25}50%{opacity:.6}}
+h1{margin:0;font-weight:800;font-size:27px;line-height:1.35}
+h1 .g{color:var(--gold-l)}
+.sub{margin:4px 0 0;color:var(--steel);font-size:13px;letter-spacing:.2em}
+.pill{display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:6px 14px;border-radius:999px;font-size:13px;font-weight:700;border:1px solid var(--line);background:rgba(255,255,255,.03)}
+.pill i{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok)}
+.pill.warn i{background:var(--gold);box-shadow:0 0 10px var(--gold)}
+.pill.bad i{background:var(--bad);box-shadow:0 0 10px var(--bad)}
+
+.card{border-radius:18px;background:var(--navy);border:1px solid var(--line);padding:18px}
+.card h2{margin:0 0 12px;font-size:14px;font-weight:600;color:var(--steel);display:flex;align-items:center;gap:10px}
+.card h2::before{content:"";width:4px;height:16px;border-radius:2px;background:var(--cyan-d)}
+.card h2 .en{margin-inline-start:auto;font-size:11px;letter-spacing:.2em;color:var(--dim)}
+
+.rollno{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.rollno .v{font-size:clamp(17px,5.4vw,24px);font-weight:700;letter-spacing:.02em;white-space:nowrap;min-width:0}
+.copy{flex:none;font:inherit;font-size:13px;font-weight:700;color:var(--cyan);background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.35);border-radius:10px;padding:8px 12px;cursor:pointer}
+.copy:focus-visible,.cta:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+
+.specs{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+.spec{background:var(--navy);padding:13px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.spec > span{font-size:12px;color:var(--steel)}.spec b span{color:var(--ice)}
+.spec b{font-size:18px;font-weight:700;overflow-wrap:anywhere}
+.spec b.mono{font-size:21px;font-weight:600;text-align:right}
+.spec.wide{grid-column:1 / -1}
+
+.war{display:flex;flex-direction:column;gap:12px}
+.war p{margin:0;color:#c8d0e0;font-size:15px;line-height:1.8}
+.cta{display:flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;border-radius:14px;padding:15px;font-weight:800;font-size:17px;color:var(--void);background:linear-gradient(180deg,#2fe0ff,var(--cyan));box-shadow:0 8px 30px rgba(0,212,255,.25)}
+.cta.ghost{background:transparent;color:var(--ice);border:1px solid var(--line);box-shadow:none;font-weight:700;font-size:15px}
+.done{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:rgba(0,224,176,.08);border:1px solid rgba(0,224,176,.3);color:var(--ok);font-weight:700}
+.steps{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;counter-reset:s}
+.steps li{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:#c8d0e0;line-height:1.7}
+.steps li::before{counter-increment:s;content:counter(s);flex:none;width:22px;height:22px;border-radius:6px;background:var(--mid);color:var(--cyan);font-family:var(--f-en);font-weight:700;display:grid;place-items:center;font-size:13px;margin-top:2px}
+
+.note{font-size:13px;color:var(--steel);line-height:1.8;text-align:center;margin:0}
+footer{display:flex;flex-direction:column;align-items:center;gap:10px;padding-top:10px}
+.slogan{display:flex;flex-direction:column;align-items:center;line-height:1.15}
+.slogan .w{font-family:var(--f-en);font-weight:700;font-size:20px;letter-spacing:.18em;direction:ltr}
+.slogan .w b{color:var(--cyan)}
+.slogan .s{font-weight:700;font-size:17px;color:var(--cyan)}
+footer a{color:var(--steel);text-decoration:none;font-family:var(--f-en);letter-spacing:.12em;font-size:14px;direction:ltr}
+
+.skel{height:16px;border-radius:8px;background:linear-gradient(90deg,var(--mid),#22263a,var(--mid));background-size:200% 100%;animation:sh 1.2s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ice);color:var(--void);font-weight:700;padding:10px 18px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.seal .ring,.seal .tick{stroke-dashoffset:0}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 100 116" aria-hidden="true"><polygon points="50,3 97,30 97,86 50,113 3,86 3,30" fill="none" stroke="#f0f4f8" stroke-width="6"/><path d="M22 34 L47 70 L72 34" fill="none" stroke="#00d4ff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path d="M47 70 L47 96" fill="none" stroke="#f0f4f8" stroke-width="5"/></svg>
+      <div class="wordmark">A<b>VV</b>A CAR</div>
+    </div>
+    <div class="tag">SMART PPF</div>
+  </header>
+
+  <section class="hero" id="hero">
+    <div class="seal" aria-hidden="true">
+      <svg viewBox="0 0 140 160">
+        <polygon class="glow" points="70,4 136,42 136,118 70,156 4,118 4,42" fill="none" stroke="#c8a84b" stroke-width="10" opacity=".3" filter="blur(6px)"/>
+        <polygon class="ring" points="70,4 136,42 136,118 70,156 4,118 4,42" fill="rgba(200,168,75,.06)" stroke="#c8a84b" stroke-width="3"/>
+        <polygon points="70,18 124,49 124,111 70,142 16,111 16,49" fill="none" stroke="#c8a84b" stroke-opacity=".35" stroke-width="1"/>
+        <path class="tick" d="M44 82 L62 100 L98 62" fill="none" stroke="#e6cf86" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h1 id="title">جاري التحقق من الرول…</h1>
+    <p class="sub en" id="subtitle">VERIFYING</p>
+    <div id="pillBox"></div>
+  </section>
+
+  <div id="content">
+    <div class="card"><div class="skel" style="width:60%"></div><div style="height:12px"></div><div class="skel"></div></div>
+  </div>
+
+  <footer>
+    <div class="slogan"><div class="w">A<b>VV</b>ACAR</div><div class="s">منكم ولكم</div></div>
+    <a href="https://avvacar.com">avvacar.com</a>
+  </footer>
+</div>
+<div class="toast" id="toast">تم النسخ ✓</div>
+
+<script>
+const API = "https://uctvlqcwltpiqabyvchb.supabase.co/functions/v1/rolls";
+const WARRANTY = "https://warranty.avvacar.com/";
+const SPECS = {
+  "5201": { type:"Gloss Clear", ar:"شفاف لامع", material:"LUBRIZOL", glue:"ASHLAND", thickness:"8.5 mil", size:"1.52 × 15 م" }
+};
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function batchDate(b){ const m=/^(\d{2})(\d{2})(\d{4})$/.exec(String(b||"")); return m ? `${m[1]}-${m[2]}-${m[3]}` : ""; }
+function toast(t){ const el=$("#toast"); el.textContent=t; el.classList.add("on"); setTimeout(()=>el.classList.remove("on"),1600); }
+async function copy(text){
+  try { await navigator.clipboard.writeText(text); toast("تم نسخ رقم الرول ✓"); }
+  catch(e){ const r=document.createRange(); const n=$("#rollv"); r.selectNodeContents(n); const s=getSelection(); s.removeAllRanges(); s.addRange(r); toast("حدد الرقم وانسخه"); }
+}
+function pill(kind, text){ $("#pillBox").innerHTML = `<div class="pill ${kind}"><i></i>${esc(text)}</div>`; }
+
+function notFound(msg){
+  $("#hero").querySelector(".seal").style.display="none";
+  $("#title").innerHTML = "هذا الرمز غير مسجّل لدى <span class='en'>AVVA CAR</span>";
+  $("#subtitle").textContent = "NOT VERIFIED";
+  pill("bad", "لم يتم التحقق");
+  $("#content").innerHTML = `<div class="card war"><p>${esc(msg || "ما لقينا هذا الرول في سجلاتنا. تأكد إنك صوّرت الملصق الأصلي على الكرتون، أو تواصل معنا وأرسل صورة الملصق.")}</p>
+    <a class="cta ghost" href="mailto:avvacar.store@gmail.com">avvacar.store@gmail.com</a></div>`;
+}
+
+function render(r){
+  const parts = /^AVVA-(\d+)\.(\d+)-(\d+)$/.exec(r.carton_no || "") || [];
+  const sp = SPECS[parts[1]] || { type: r.film || "PPF", ar: r.film || "" };
+  if (r.status === "void") {
+    $("#title").innerHTML = "رول <span class='en'>AVVA CAR</span> أصلي";
+    $("#subtitle").textContent = "GENUINE · NOT ELIGIBLE";
+    pill("bad", "غير مشمول بالضمان");
+  } else {
+    $("#title").innerHTML = "رول أصلي <span class='g'>معتمد</span>";
+    $("#subtitle").textContent = "GENUINE AVVA CAR ROLL";
+    pill(r.warranty_registered ? "" : "warn", r.warranty_registered ? "الضمان مفعّل" : (r.sold ? "مُباع عبر المتجر الرسمي" : "موثّق في مستودع AVVA CAR"));
+  }
+  const bd = batchDate(parts[2]);
+  const war = r.status === "void"
+    ? `<p>هذا الرول مسجّل عندنا كرول غير صالح للضمان. إذا تشوف إن فيه خطأ تواصل معنا.</p><a class="cta ghost" href="mailto:avvacar.store@gmail.com">avvacar.store@gmail.com</a>`
+    : r.warranty_registered
+      ? `<div class="done">✓ ضمان هذا الرول مفعّل ومسجّل باسم صاحبه</div><a class="cta ghost" href="${WARRANTY}">افتح صفحة الضمان</a>`
+      : `<p>كل رول من <b class="en">AVVA CAR</b> مشمول بالضمان الرسمي. فعّل ضمانك بخطوتين:</p>
+         <ol class="steps"><li>انسخ رقم الرول من الأعلى.</li><li>افتح صفحة الضمان، واكتب رقم طلبك، والصق رقم الرول في خانته.</li></ol>
+         <a class="cta" href="${WARRANTY}">فعّل ضمانك الآن ←</a>`;
+  $("#content").innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:18px">
+      <div class="card">
+        <h2>رقم الرول <span class="en">ROLL NUMBER</span></h2>
+        <div class="rollno"><div class="v mono" id="rollv">${esc(r.carton_no)}</div><button class="copy" id="copyBtn" type="button">نسخ</button></div>
+      </div>
+      <div class="card">
+        <h2>مواصفات الرول <span class="en">SPECIFICATIONS</span></h2>
+        <div class="specs">
+          <div class="spec wide"><span>نوع الفلم</span><b><span class="en" style="font-size:22px;font-weight:700">${esc(sp.type)}</span>${sp.ar ? " · " + esc(sp.ar) : ""}</b></div>
+          ${sp.material ? `<div class="spec"><span>الخامة</span><b class="mono">${esc(sp.material)}</b></div>` : ""}
+          ${sp.glue ? `<div class="spec"><span>الغراء</span><b class="mono">${esc(sp.glue)}</b></div>` : ""}
+          ${sp.thickness ? `<div class="spec"><span>السماكة</span><b class="mono">${esc(sp.thickness)}</b></div>` : ""}
+          ${sp.size ? `<div class="spec"><span>المقاس</span><b class="mono">${esc(sp.size)}</b></div>` : ""}
+          ${bd ? `<div class="spec wide"><span>دفعة الإنتاج</span><b class="mono">${esc(bd)}</b></div>` : ""}
+        </div>
+      </div>
+      <div class="card war">
+        <h2>الضمان <span class="en">WARRANTY</span></h2>
+        ${war}
+      </div>
+      <p class="note">صُنع في مصنع <b class="en">AVVA CAR</b> الخاص، ولا يُباع إلا عبر المتجر الرسمي <b class="en">avvacar.com</b></p>
+    </div>`;
+  $("#copyBtn").onclick = () => copy(r.carton_no);
+}
+
+(async () => {
+  const t = new URLSearchParams(location.search).get("t") || "";
+  if (!/^[A-Za-z0-9_-]{8,40}$/.test(t)) return notFound();
+  try {
+    const res = await fetch(API + "?roll=" + encodeURIComponent(t));
+    const j = await res.json();
+    if (!j.ok) return notFound(j.code === "not_found" ? null : j.message);
+    render(j.roll);
+  } catch(e) { notFound("ما قدرنا نتحقق الحين. تأكد من اتصالك بالإنترنت وجرّب مرة ثانية."); }
+})();
+</script>
+</body>
+</html>
