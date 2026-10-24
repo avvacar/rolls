@@ -100,7 +100,7 @@ dialog .card{margin:0}
 </nav>
 <main>
 <div class="card" id="stockBar" style="display:flex;gap:10px;align-items:center;justify-content:space-between;padding:12px 16px">
-  <div><div style="font-size:13px;color:var(--mut)">الموجود في المستودع الحين</div><div style="font-size:34px;font-weight:700;line-height:1.1" id="sbIn">—</div></div>
+  <div><div style="font-size:13px;color:var(--mut)">الموجود في المستودع الحين</div><div style="font-size:34px;font-weight:700;line-height:1.1" id="sbIn">—</div><div id="sbOpen" style="font-size:13px;color:#0089bd"></div></div>
   <div style="text-align:left"><div style="font-size:13px;color:var(--mut)">مسحت في هذي الجلسة</div><div style="font-size:22px;font-weight:700" id="sbSess">0</div><div style="font-size:13px;color:var(--mut)">طلع للزبائن: <b id="sbOut">—</b></div></div>
 </div>
 
@@ -167,6 +167,34 @@ dialog .card{margin:0}
       <div class="msg" id="olMsg"></div>
     </div>
   </div>
+  <div class="card" id="mCard" style="margin-top:14px;border:1.5px solid #bfe9f8">
+    <h2 style="margin:0 0 6px">✂ قص أمتار (من الرول المفتوح)</h2>
+    <div id="mOpen" class="mopen"></div>
+    <div id="mCutBox">
+      <label>رقم الطلب (امسح الفاتورة أو اكتبه)</label>
+      <div class="row">
+        <input id="mOrder" class="ltr" inputmode="numeric" placeholder="294917352" style="flex:3">
+        <button class="btn sec" id="mOrderScan" style="flex:1">📷 سكان</button>
+      </div>
+      <div class="cam" id="camMOrder" style="margin-top:8px"><video playsinline muted></video><div class="hint">وجّه الكاميرا على باركود الفاتورة</div></div>
+      <label>كم متر؟</label>
+      <div class="mchips"><button data-m="1">1</button><button data-m="1.5">1.5</button><button data-m="2">2</button><button data-m="3" class="on">3</button><button data-m="4">4</button><button data-m="5">5</button></div>
+      <input id="mMeters" class="ltr" inputmode="decimal" value="3" style="margin-top:8px;font-size:20px;text-align:center;font-weight:700">
+      <div style="height:10px"></div>
+      <button class="btn w" id="mCutBtn">✂ قص وسجّل</button>
+    </div>
+    <div class="msg" id="mMsg"></div>
+    <details id="mOpenNew" style="margin-top:12px"><summary style="cursor:pointer;font-weight:700;color:#0089bd">📦 فتح رول جديد للأمتار</summary>
+      <label>امسح ملصق الرول اللي بتفكّه (بجهاز السكان أو الكاميرا)</label>
+      <div class="row">
+        <input id="mRoll" class="ltr" autocomplete="off" placeholder="AVVA-5201..." style="flex:3">
+        <button class="btn sec" id="mRollScan" style="flex:1">📷 سكان</button>
+      </div>
+      <div class="cam" id="camMRoll" style="margin-top:8px"><video playsinline muted></video><div class="hint">وجّه الكاميرا على ملصق الرول</div></div>
+      <div style="height:8px"></div><button class="btn sec w" id="mOpenBtn">فتح الرول</button>
+    </details>
+    <div id="mCuts" style="margin-top:12px"></div>
+  </div>
 </section>
 
 <!-- ============ المخزون ============ -->
@@ -220,7 +248,7 @@ dialog .card{margin:0}
 
 <script>
 const API = "https://uctvlqcwltpiqabyvchb.supabase.co/functions/v1/rolls";
-const ST = {in_stock:"في المستودع",assigned:"مصروف",installed:"مركّب",returned:"مرتجع",damaged:"تالف"};
+const ST = {in_stock:"في المستودع",assigned:"مصروف",installed:"مركّب",returned:"مرتجع",damaged:"تالف",open:"مفتوح للأمتار",empty:"خلص (أمتار)"};
 const $ = (s) => document.querySelector(s);
 const store = { get(k){try{return localStorage.getItem(k)}catch(e){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}}, del(k){try{localStorage.removeItem(k)}catch(e){}} };
 let PASS = "", ROLE = "";
@@ -251,7 +279,7 @@ function parseCarton(raw){
 }
 
 let SESS=0;
-async function refreshBar(){ const s = await api("stats"); if (s.ok) { $("#sbIn").textContent = s.counts.in_stock; $("#sbOut").textContent = s.counts.assigned + s.counts.installed; } }
+async function refreshBar(){ const s = await api("stats"); if (s.ok) { $("#sbIn").textContent = s.counts.in_stock; $("#sbOut").textContent = s.counts.assigned + s.counts.installed; const e=$("#sbOpen"); if (e) e.innerHTML = s.open ? `+ رول مفتوح: باقي <b>${(+Number(s.open.remaining).toFixed(2))}</b> م` : ""; } }
 /* ---------- login ---------- */
 async function login(p){
   PASS = p; const j = await api("login");
@@ -274,6 +302,7 @@ function tab(t){
   document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.t===t));
   ["in","out","stock","print"].forEach(x => $("#t-"+x).classList.toggle("hide", x!==t));
   stopAll();
+  if (t==="out") loadMeters();
   if (t==="stock") { loadStock(); setTimeout(()=>{ const g=document.getElementById("cxGun"); if(g) g.focus(); },100); } if (t==="print") loadPrint();
 }
 document.querySelectorAll("nav button").forEach(b => b.onclick = () => tab(b.dataset.t));
@@ -528,6 +557,43 @@ $("#olPdf").onclick = async () => { if (!LAST_OUT) return; try { const h = await
 /* ---------- المخزون ---------- */
 let qT;
 
+
+/* ---------- قص أمتار ---------- */
+document.head.insertAdjacentHTML("beforeend", `<style>.mopen{border-radius:14px;padding:12px 14px;background:linear-gradient(135deg,#0b0b10,#1b2330);color:#fff;margin-bottom:10px}.mopen .k{font-size:12px;color:#9fb3c8}.mopen .r{font-size:38px;font-weight:800;line-height:1.1;color:#00AEEF}.mopen .r small{font-size:16px;color:#fff;font-weight:700}.mbar{height:8px;border-radius:8px;background:#2b3646;overflow:hidden;margin-top:8px}.mbar i{display:block;height:100%;background:#00AEEF}.mchips{display:flex;gap:6px;flex-wrap:wrap}.mchips button{flex:1;min-width:44px;padding:10px 0;border-radius:10px;border:1.5px solid #d9dde3;background:#fff;font:inherit;font-weight:800;font-size:16px;cursor:pointer}.mchips button.on{background:#00AEEF;border-color:#00AEEF;color:#fff}.mcut{display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid #eee;font-size:14px}.mcut.u{opacity:.4;text-decoration:line-through}</style>`);
+const fmtM = n => (+Number(n).toFixed(2)).toString();
+async function loadMeters(){
+  const j = await api("meters"); if (!j.ok) return;
+  const o = j.open;
+  $("#mOpen").innerHTML = o ? `<div class="k">الرول المفتوح الحين</div><div class="mono" style="direction:ltr;text-align:right;font-weight:700">${esc(o.carton_no)}</div><div class="r">${fmtM(o.remaining)} <small>متر باقي من ${fmtM(o.length_m)}</small></div><div class="mbar"><i style="width:${Math.max(0,Math.min(100,o.remaining/o.length_m*100))}%"></i></div>`
+    : `<div class="r" style="font-size:20px;color:#fff">ما فيه رول مفتوح</div><div class="k">افتح رول من «📦 فتح رول جديد للأمتار» تحت.</div>`;
+  $("#mCutBox").classList.toggle("hide", !o); if (!o) $("#mOpenNew").open = true;
+  $("#mCuts").innerHTML = (j.cuts||[]).length ? `<div style="font-weight:700;margin-bottom:4px">آخر القصّات</div>` + j.cuts.map(c=>`<div class="mcut${c.undone?" u":""}"><b style="min-width:52px">${fmtM(c.meters)} م</b><span style="flex:1">${c.order_ref?"طلب "+c.order_ref:"بدون طلب"}<br><small class="mono" style="color:var(--mut)">${esc(c.carton_no)}</small></span>${c.undone?"":`<button class="btn sec mU" data-id="${c.id}" style="padding:5px 10px">↩ تراجع</button>`}</div>`).join("") : "";
+  document.querySelectorAll(".mU").forEach(b=>b.onclick=async()=>{ const x=await api("uncut",{cut_id:+b.dataset.id}); msg("#mMsg", x.ok?"تم التراجع ورجعت الأمتار للرول.":x.message, x.ok?"ok":"bad"); loadMeters(); });
+}
+document.querySelectorAll(".mchips button").forEach(b=>b.onclick=()=>{ document.querySelectorAll(".mchips button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); $("#mMeters").value=b.dataset.m; });
+$("#mMeters").oninput = () => document.querySelectorAll(".mchips button").forEach(x=>x.classList.toggle("on", x.dataset.m===toLatin($("#mMeters").value)));
+$("#mOrderScan").onclick = () => scanInto("#camMOrder", code => { $("#mOrder").value = toLatin(code).replace(/\D/g,""); });
+$("#mRollScan").onclick = () => scanInto("#camMRoll", code => { $("#mRoll").value = fixScan(code); mOpen(); });
+gunInput($("#mRoll"), v => { $("#mRoll").value = fixScan(v); mOpen(); });
+async function mOpen(force=false){
+  const key = rollKey(fixScan($("#mRoll").value)); if (!key) { msg("#mMsg","امسح ملصق الرول أول.","bad"); return; }
+  const j = await api("open_roll",{roll:key, force});
+  if (j.need_confirm) { if (confirm(j.message)) return mOpen(true); return; }
+  if (!j.ok) { beep(false); msg("#mMsg", j.message, "bad"); return; }
+  beep(true); $("#mRoll").value=""; $("#mOpenNew").open=false; msg("#mMsg", `انفتح ✓ ${j.roll.carton_no} للأمتار.`, "ok"); loadMeters(); refreshBar();
+}
+$("#mOpenBtn").onclick = () => mOpen();
+$("#mCutBtn").onclick = async () => {
+  const m = parseFloat(toLatin($("#mMeters").value).replace(",","."));
+  const order = toLatin($("#mOrder").value).replace(/\D/g,"");
+  if (!(m>0)) { msg("#mMsg","اكتب كم متر.","bad"); return; }
+  if (!order && !confirm("ما كتبت رقم طلب. تسجّل القصّة بدون طلب؟")) return;
+  $("#mCutBtn").disabled = true; const j = await api("cut",{meters:m, order}); $("#mCutBtn").disabled = false;
+  if (!j.ok) { beep(false); msg("#mMsg", j.message, "bad"); return; }
+  beep(true); $("#mOrder").value="";
+  msg("#mMsg", j.finished ? `تم ✓ قصّيت ${fmtM(m)} م. الرول ${j.roll} خلص — افتح رول جديد.` : `تم ✓ قصّيت ${fmtM(m)} م${order?" للطلب "+order:""}. باقي ${fmtM(j.remaining)} م.`, j.finished?"warn":"ok");
+  loadMeters(); refreshBar();
+};
 /* ---------- إلغاء بالسكان ---------- */
 const CX = []; let cxBusy=false, cxLast="", cxLastAt=0;
 function cxRender(){
