@@ -171,7 +171,17 @@ dialog .card{margin:0}
 
 <!-- ============ المخزون ============ -->
 <section id="t-stock" class="hide">
-  <div class="stats" id="stats"></div>
+  <div class="card" style="border:1.5px solid #f3c4c4">
+    <h2 style="margin:0 0 4px">🗑 إلغاء ملصقات غلط بالسكان</h2>
+    <p style="color:var(--mut);margin:0 0 10px;font-size:14px">شغّل الكاميرا ووجّهها على باركود أو QR الملصق الغلط. أول ما يقرأه يلغيه على طول ويطلع من المخزون. الكاميرا تبقى شغّالة للي بعده.</p>
+    <button class="btn w" id="cxStart" style="background:#c62828;color:#fff">📷 ابدأ الإلغاء بالسكان</button>
+    <button class="btn w sec hide" id="cxStop">⏹ إيقاف الكاميرا</button>
+    <div class="cam" id="camCancel" style="margin-top:8px"><video playsinline muted></video><div class="hint">وجّه الكاميرا على باركود الملصق الغلط</div></div>
+    <div class="msg" id="cxMsg"></div>
+    <div id="cxHead" class="hide" style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-weight:700"><span>ألغيت في هذي الجلسة</span><span id="cxN" style="background:#c62828;color:#fff;border-radius:20px;padding:2px 12px">0</span></div>
+    <div id="cxList"></div>
+  </div>
+  <div class="stats" id="stats" style="margin-top:14px"></div>
   <div class="card" style="margin-top:14px">
     <div class="row">
       <input id="q" placeholder="بحث: رقم الرول، R-، رقم الطلب" style="flex:3">
@@ -287,7 +297,7 @@ async function openCam(box){
   return v;
 }
 function closeCam(box){ const s = streams[box.id]; if (s) s.getTracks().forEach(t=>t.stop()); delete streams[box.id]; box.style.display="none"; box._stop = true; }
-function stopAll(){ document.querySelectorAll(".cam").forEach(closeCam); $("#ocrShot").classList.add("hide"); $("#ocrStop").classList.add("hide"); $("#ocrStart").classList.remove("hide"); }
+function stopAll(){ document.querySelectorAll(".cam").forEach(closeCam); const cs=document.getElementById("cxStop"); if(cs){ cs.classList.add("hide"); $("#cxStart").classList.remove("hide"); } $("#ocrShot").classList.add("hide"); $("#ocrStop").classList.add("hide"); $("#ocrStart").classList.remove("hide"); }
 
 let zxing = null;
 async function getDetector(){
@@ -515,6 +525,43 @@ $("#olPdf").onclick = async () => { if (!LAST_OUT) return; try { const h = await
 
 /* ---------- المخزون ---------- */
 let qT;
+
+/* ---------- إلغاء بالسكان ---------- */
+const CX = []; let cxBusy=false, cxLast="", cxLastAt=0;
+function cxRender(){
+  $("#cxHead").classList.toggle("hide", !CX.length); $("#cxN").textContent = CX.filter(x=>!x.undone).length;
+  $("#cxList").innerHTML = CX.map((x,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #eee;${x.undone?"opacity:.45":""}"><span style="flex:1"><b class="mono" style="direction:ltr;display:inline-block">${esc(x.carton_no)}</b><br><small style="color:var(--mut)">${esc(x.code)}${x.undone?" · رجع للمخزون":" · ملغي ✓"}</small></span>${x.undone?"":`<button class="btn sec cxU" data-i="${i}" style="padding:6px 12px">↩ تراجع</button>`}</div>`).reverse().join("");
+  document.querySelectorAll(".cxU").forEach(b=>b.onclick=async()=>{ const x=CX[+b.dataset.i]; const j=await api("set_status",{roll:x.code,status:"in_stock",note:""}); if(!j.ok){ msg("#cxMsg",j.message,"bad"); return; } x.undone=true; cxRender(); refreshBar(); msg("#cxMsg",`رجّعت ${x.carton_no} للمخزون.`,"ok"); });
+}
+async function cxHandle(raw){
+  const key = rollKey(raw); if (!key) return;
+  if (key===cxLast && Date.now()-cxLastAt<4000) return;
+  cxLast=key; cxLastAt=Date.now(); cxBusy=true;
+  try {
+    const g = await api("get",{roll:key});
+    if (!g.ok) { beep(false); msg("#cxMsg","هذا الباركود مو مسجّل في المستودع: "+key,"bad"); return; }
+    const r = g.roll;
+    if (r.status==="damaged") { beep(false); msg("#cxMsg",`${r.carton_no} ملغي من قبل.`,"warn"); return; }
+    if (r.status==="assigned"||r.status==="installed") { beep(false); msg("#cxMsg",`${r.carton_no} مصروف للطلب ${r.order_ref} — ما ألغيته. لو فعلاً غلط كلمني.`,"bad"); return; }
+    const j = await api("set_status",{roll:r.code,status:"damaged",note:"ملصق ملغي (غلط)"});
+    if (!j.ok) { beep(false); msg("#cxMsg",j.message,"bad"); return; }
+    beep(true); CX.push({code:r.code,carton_no:r.carton_no}); cxRender(); refreshBar();
+    msg("#cxMsg",`ألغيت ✓ ${r.carton_no}`,"ok");
+  } finally { cxBusy=false; }
+}
+$("#cxStart").onclick = async () => {
+  const box=$("#camCancel"); let v;
+  try { v = await openCam(box); } catch(e){ alert("ما قدرت أفتح الكاميرا. تأكد إنك سمحت للمتصفح يستخدمها."); return; }
+  box._stop=false; $("#cxStart").classList.add("hide"); $("#cxStop").classList.remove("hide");
+  const det = await getDetector();
+  const loop = async () => {
+    if (box._stop) return;
+    if (!cxBusy && v.readyState>=2) { const codes = await det.detect(v).catch(()=>[]); if (codes.length) await cxHandle(codes[0]); }
+    setTimeout(loop, 200);
+  };
+  loop();
+};
+$("#cxStop").onclick = () => { closeCam($("#camCancel")); $("#cxStop").classList.add("hide"); $("#cxStart").classList.remove("hide"); loadStock(); };
 async function loadStock(){
   const s = await api("stats");
   if (s.ok) { const c=s.counts;
