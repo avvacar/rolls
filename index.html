@@ -184,6 +184,7 @@ dialog .card{margin:0}
       <button class="btn w" id="mCutBtn">✂ قص وسجّل</button>
     </div>
     <div class="msg" id="mMsg"></div>
+    <div id="mLab" class="row hide" style="margin-top:8px"><button class="btn" id="mLabPrint">🖨 طباعة ملصق القص</button><button class="btn sec" id="mLabPdf">⬇ ملصق القص PDF</button></div>
     <details id="mOpenNew" style="margin-top:12px"><summary style="cursor:pointer;font-weight:700;color:#0089bd">📦 فتح رول جديد للأمتار</summary>
       <label>امسح ملصق الرول اللي بتفكّه (بجهاز السكان أو الكاميرا)</label>
       <div class="row">
@@ -558,7 +559,76 @@ $("#olPdf").onclick = async () => { if (!LAST_OUT) return; try { const h = await
 let qT;
 
 
-/* ---------- قص أمتار ---------- */
+/* ---------- قص أمتار ---------- */const CUT_CSS = `.cl{box-sizing:border-box;width:100mm;height:150mm;padding:4mm;display:flex;flex-direction:column;overflow:hidden;font-family:"Cairo","IBM Plex Sans Arabic",Tahoma,Arial,sans-serif;color:#000;background:#fff}
+.cl *{box-sizing:border-box}
+.cl .fr{position:relative;flex:1;border:.7mm solid #000;border-radius:3.5mm;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;padding-bottom:.6mm}
+.cl .wm{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.05;pointer-events:none}.cl .wm svg{width:78mm;height:90mm}
+.cl .hd{position:relative;display:flex;align-items:center;justify-content:space-between;padding:2.6mm 3.6mm 2.2mm;border-bottom:.45mm solid #000}
+.cl .lg{display:flex;flex-direction:column;align-items:flex-start;direction:ltr}
+.cl .lb{font-weight:800;letter-spacing:1.3mm;font-size:5.2mm;line-height:1;white-space:nowrap}.cl .lb b{color:#00b5d9}
+.cl .tg{font-size:1.9mm;letter-spacing:.8mm;color:#333;margin-top:.6mm}
+.cl .tk{background:#000;color:#fff;border-radius:2mm;padding:1mm 2.4mm;text-align:center;line-height:1.15}
+.cl .tk b{display:block;font-size:3.4mm;font-weight:800}.cl .tk i{display:block;font-style:normal;font-size:1.9mm;letter-spacing:.6mm;direction:ltr}
+.cl .big{position:relative;display:flex;align-items:center;justify-content:center;gap:4mm;padding:2.4mm 3mm 1.6mm}
+.cl .mm{display:flex;align-items:baseline;gap:1.6mm;direction:rtl}
+.cl .mm .n{font-family:"Cairo",Arial,sans-serif;font-size:30mm;font-weight:800;line-height:.9;letter-spacing:-.6mm;direction:ltr}
+.cl .mm .u{font-size:7mm;font-weight:800}
+.cl .dim{display:flex;flex-direction:column;align-items:center;gap:.6mm;border-inline-start:.4mm solid #000;padding-inline-start:4mm}
+.cl .dim .k{font-size:2.3mm;color:#333}.cl .dim .v{font-family:Consolas,monospace;font-size:3.6mm;font-weight:700;direction:ltr;white-space:nowrap}
+.cl .dim .f{font-size:2.6mm;font-weight:700;direction:ltr}.cl .dim .fa{font-size:2.6mm;font-weight:700}
+.cl .ob{position:relative;margin:0 3mm;border:.45mm solid #000;border-radius:2.2mm;padding:1.6mm 2.4mm 1.8mm;display:flex;flex-direction:column;align-items:center;gap:1mm;background:#fff}
+.cl .kv{width:100%;display:flex;align-items:center;justify-content:space-between;gap:2mm}
+.cl .cu{font-size:3.8mm;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46mm}
+.cl .no{display:flex;align-items:baseline;gap:1.4mm;font-family:Consolas,monospace;font-size:5mm;font-weight:700;direction:ltr}
+.cl .no i{font-style:normal;font-family:"Cairo",Tahoma,sans-serif;font-size:2.4mm;font-weight:600;color:#333;direction:rtl}
+.cl .bc svg{width:82mm;height:12mm;display:block}
+.cl .gr{position:relative;display:grid;grid-template-columns:1fr 1fr;margin:0 3mm;border:.45mm solid #000;border-radius:2.2mm;overflow:hidden;background:#fff}
+.cl .gr>div{padding:1.4mm 2.4mm;display:flex;flex-direction:column;gap:.3mm}
+.cl .gr>div+div{border-inline-start:.45mm solid #000}
+.cl .gr .k{font-size:2.3mm;color:#333}.cl .gr .v{font-family:Consolas,monospace;font-size:4.4mm;font-weight:700;direction:ltr;text-align:right;line-height:1.1}
+.cl .rl{position:relative;margin:0 3mm;display:flex;flex-direction:column;gap:.8mm;align-items:center}
+.cl .rl .kv .k{font-size:2.3mm;color:#333}.cl .rl .rn{font-family:Consolas,monospace;font-size:3.5mm;font-weight:700;direction:ltr;white-space:nowrap}
+.cl .rl .rb svg{width:82mm;height:8mm;display:block}
+.cl .rem{position:relative;margin:0 3mm;display:flex;flex-direction:column;gap:.9mm}
+.cl .rem .kv{font-size:2.6mm;font-weight:700}.cl .rem .kv b{font-family:Consolas,monospace;font-size:3.4mm;direction:ltr}
+.cl .bar svg{width:100%;height:3.4mm;display:block}
+.cl .lgd{display:flex;gap:3mm;font-size:2.1mm;color:#333}.cl .lgd span{display:inline-flex;align-items:center;gap:.8mm}.cl .lgd i{display:inline-block;width:3mm;height:2mm;border:.3mm solid #000}
+.cl .sig{margin:0 3mm;display:flex;justify-content:space-between;gap:3mm;font-size:2.4mm;color:#333}.cl .sig span{flex:1;border-bottom:.3mm dotted #000;padding-bottom:3.2mm}
+.cl .ft{position:relative;padding:0 3mm .8mm;display:flex;flex-direction:column;align-items:center;gap:.7mm}
+.cl .micro{width:88mm;overflow:hidden;white-space:nowrap;font-family:Consolas,monospace;font-size:1.2mm;line-height:1.5;letter-spacing:.12mm;text-align:center;direction:ltr}
+.cl .fl{width:100%;display:flex;justify-content:space-between;align-items:center;font-size:2.3mm;color:#222}
+.cl .fl b{font-family:Consolas,monospace;font-size:2.8mm;direction:ltr}`;
+const CUT_WM = `<svg viewBox="0 0 100 116" xmlns="http://www.w3.org/2000/svg"><polygon points="50,3 97,30 97,86 50,113 3,86 3,30" fill="none" stroke="#000" stroke-width="1.2"/><polygon points="50,12 89,35 89,81 50,104 11,81 11,35" fill="none" stroke="#000" stroke-width=".6"/><path d="M22 34 L47 70 L72 34" fill="none" stroke="#000" stroke-width="1.4"/><path d="M47 70 L47 96" fill="none" stroke="#000" stroke-width=".8"/></svg>`;
+function cutWhen(at){
+  const d = new Date(at || Date.now()), f = o => new Intl.DateTimeFormat("en-GB", Object.assign({ timeZone: "Asia/Riyadh" }, o)).format(d);
+  return { date: f({ day: "2-digit", month: "2-digit", year: "numeric" }), time: f({ hour: "2-digit", minute: "2-digit", hour12: false }) };
+}
+function cutLabelBody(c, bar, e){
+  const m = +Number(c.meters).toFixed(2), L = +Number(c.length_m || 15).toFixed(2);
+  const rem = c.remaining == null ? null : Math.max(0, +Number(c.remaining).toFixed(2));
+  const used = rem == null ? 0 : Math.max(0, L - rem - m), pctUsed = Math.min(100, used / L * 100), pctCut = Math.min(100 - pctUsed, m / L * 100);
+  const w = cutWhen(c.at), no = "C-" + String(c.cut_id || 0).padStart(6, "0");
+  return `<div class="cl"><div class="fr"><div class="wm">${CUT_WM}</div>
+  <div class="hd"><div class="lg"><div class="lb">A<b>VV</b>A CAR</div><div class="tg">SMART PPF PROTECTION</div></div><div class="tk"><b>ملصق قص أمتار</b><i>CUT TICKET</i></div></div>
+  <div class="big"><div class="mm"><span class="n">${e(m)}</span><span class="u">متر</span></div>
+    <div class="dim"><span class="k">المقاس</span><span class="v">1.52M × ${e(m)}M</span><span class="f">Gloss Clear</span><span class="fa">شفاف لامع</span></div></div>
+  <div class="ob">${c.order_ref ? `<div class="kv"><span class="cu">${e(c.customer_name || "—")}${c.city ? " · " + e(c.city) : ""}</span><span class="no"><i>رقم الطلب</i>${e(c.order_ref)}</span></div><div class="bc">${bar(String(c.order_ref))}</div>` : `<div class="kv"><span class="cu">بدون طلب</span><span class="no">—</span></div>`}</div>
+  <div class="gr"><div><span class="k">تاريخ القص</span><span class="v">${e(w.date)}</span></div><div><span class="k">الوقت</span><span class="v">${e(w.time)}</span></div></div>
+  <div class="rl"><div class="kv" style="width:100%"><span class="k">انقص من الرول</span><span class="rn">${e(c.roll || "—")}</span></div>${c.roll ? `<div class="rb">${bar(c.roll)}</div>` : ""}</div>
+  ${rem == null ? "" : `<div class="rem"><div class="kv"><span>الباقي في الرول بعد القص</span><b>${e(rem)} / ${e(L)} M</b></div><div class="bar"><svg viewBox="0 0 100 6" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="ht" width="1.6" height="6" patternUnits="userSpaceOnUse" patternTransform="skewX(-35)"><rect width=".7" height="6" fill="#000"/></pattern></defs><rect x="0" y="0" width="100" height="6" fill="#fff"/><rect x="0" y="0" width="${pctUsed}" height="6" fill="#000"/><rect x="${pctUsed}" y="0" width="${pctCut}" height="6" fill="url(#ht)"/><rect x=".3" y=".3" width="99.4" height="5.4" fill="none" stroke="#000" stroke-width=".6"/></svg></div><div class="lgd"><span><i style="background:#000"></i>مقصوص قبل</span><span><svg viewBox="0 0 12 8" style="width:3mm;height:2mm;display:inline-block;vertical-align:middle"><defs><pattern id="ht2" width="2.4" height="8" patternUnits="userSpaceOnUse" patternTransform="skewX(-35)"><rect width="1" height="8" fill="#000"/></pattern></defs><rect width="12" height="8" fill="url(#ht2)"/><rect x=".5" y=".5" width="11" height="7" fill="none" stroke="#000"/></svg>هذا القص</span><span><i></i>باقي</span></div></div>`}
+  <div class="sig"><span>قصّه: </span><span>راجعه: </span></div>
+  <div class="ft"><div class="micro">${Array(14).fill("AVVA CAR ◆ CUT ◆ GENUINE").join(" ◆ ")}</div><div class="fl"><span>رقم القص <b>${e(no)}</b></span><span>LUBRIZOL · ASHLAND · 8.5 mil</span></div></div>
+</div></div>`;
+}
+
+async function cutLabelHtml(c){
+  const svgs = {}; for (const v of [c.order_ref, c.roll].filter(Boolean)) svgs[String(v)] = await barcodeSvg(String(v));
+  return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>ملصق قص ${esc(c.order_ref||"")}</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&display=swap"><style>@page{size:100mm 150mm;margin:0}body{margin:0;background:#fff}${CUT_CSS}.lab{width:100mm;height:150mm}</style></head><body><div class="lab">${cutLabelBody(c, v => svgs[String(v)] || "", esc)}</div><script>(document.fonts?document.fonts.ready:Promise.resolve()).then(()=>setTimeout(()=>print(),300))<\/script></body></html>`;
+}
+async function printCut(c){ const h = await cutLabelHtml(c); const w = window.open("","_blank"); if (!w) { msg("#mMsg","المتصفح منع فتح صفحة الطباعة. اسمح بالنوافذ المنبثقة (Pop-ups).","bad"); return; } w.document.open(); w.document.write(h); w.document.close(); }
+async function pdfCut(c, btnSel){ const h = (await cutLabelHtml(c)).replace(/<script>\(document\.fonts[\s\S]*?<\/script>/,""); await htmlToPdf(h, 1, "AVVA-cut-"+(c.order_ref||"x")+"-"+c.cut_id+".pdf", "#mMsg", btnSel); }
+async function cutById(id){ const j = await api("cut_info",{cut_id:id}); if (!j.ok) { msg("#mMsg", j.message, "bad"); return null; } return j; }
+
 document.head.insertAdjacentHTML("beforeend", `<style>.mopen{border-radius:14px;padding:12px 14px;background:linear-gradient(135deg,#0b0b10,#1b2330);color:#fff;margin-bottom:10px}.mopen .k{font-size:12px;color:#9fb3c8}.mopen .r{font-size:38px;font-weight:800;line-height:1.1;color:#00AEEF}.mopen .r small{font-size:16px;color:#fff;font-weight:700}.mbar{height:8px;border-radius:8px;background:#2b3646;overflow:hidden;margin-top:8px}.mbar i{display:block;height:100%;background:#00AEEF}.mchips{display:flex;gap:6px;flex-wrap:wrap}.mchips button{flex:1;min-width:44px;padding:10px 0;border-radius:10px;border:1.5px solid #d9dde3;background:#fff;font:inherit;font-weight:800;font-size:16px;cursor:pointer}.mchips button.on{background:#00AEEF;border-color:#00AEEF;color:#fff}.mcut{display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid #eee;font-size:14px}.mcut.u{opacity:.4;text-decoration:line-through}</style>`);
 const fmtM = n => (+Number(n).toFixed(2)).toString();
 async function loadMeters(){
@@ -567,7 +637,8 @@ async function loadMeters(){
   $("#mOpen").innerHTML = o ? `<div class="k">الرول المفتوح الحين</div><div class="mono" style="direction:ltr;text-align:right;font-weight:700">${esc(o.carton_no)}</div><div class="r">${fmtM(o.remaining)} <small>متر باقي من ${fmtM(o.length_m)}</small></div><div class="mbar"><i style="width:${Math.max(0,Math.min(100,o.remaining/o.length_m*100))}%"></i></div>`
     : `<div class="r" style="font-size:20px;color:#fff">ما فيه رول مفتوح</div><div class="k">افتح رول من «📦 فتح رول جديد للأمتار» تحت.</div>`;
   $("#mCutBox").classList.toggle("hide", !o); if (!o) $("#mOpenNew").open = true;
-  $("#mCuts").innerHTML = (j.cuts||[]).length ? `<div style="font-weight:700;margin-bottom:4px">آخر القصّات</div>` + j.cuts.map(c=>`<div class="mcut${c.undone?" u":""}"><b style="min-width:52px">${fmtM(c.meters)} م</b><span style="flex:1">${c.order_ref?"طلب "+c.order_ref:"بدون طلب"}<br><small class="mono" style="color:var(--mut)">${esc(c.carton_no)}</small></span>${c.undone?"":`<button class="btn sec mU" data-id="${c.id}" style="padding:5px 10px">↩ تراجع</button>`}</div>`).join("") : "";
+  $("#mCuts").innerHTML = (j.cuts||[]).length ? `<div style="font-weight:700;margin-bottom:4px">آخر القصّات</div>` + j.cuts.map(c=>`<div class="mcut${c.undone?" u":""}"><b style="min-width:52px">${fmtM(c.meters)} م</b><span style="flex:1">${c.order_ref?"طلب "+c.order_ref:"بدون طلب"}<br><small class="mono" style="color:var(--mut)">${esc(c.carton_no)}</small></span>${c.undone?"":`<button class="btn sec mP" data-id="${c.id}" style="padding:5px 10px" title="طباعة ملصق القص">🏷</button><button class="btn sec mU" data-id="${c.id}" style="padding:5px 10px">↩ تراجع</button>`}</div>`).join("") : "";
+  document.querySelectorAll(".mP").forEach(b=>b.onclick=async()=>{ const c=await cutById(+b.dataset.id); if (c) { LAST_CUT=c; $("#mLab").classList.remove("hide"); printCut(c); } });
   document.querySelectorAll(".mU").forEach(b=>b.onclick=async()=>{ const x=await api("uncut",{cut_id:+b.dataset.id}); msg("#mMsg", x.ok?"تم التراجع ورجعت الأمتار للرول.":x.message, x.ok?"ok":"bad"); loadMeters(); });
 }
 document.querySelectorAll(".mchips button").forEach(b=>b.onclick=()=>{ document.querySelectorAll(".mchips button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); $("#mMeters").value=b.dataset.m; });
@@ -583,6 +654,9 @@ async function mOpen(force=false){
   beep(true); $("#mRoll").value=""; $("#mOpenNew").open=false; msg("#mMsg", `انفتح ✓ ${j.roll.carton_no} للأمتار.`, "ok"); loadMeters(); refreshBar();
 }
 $("#mOpenBtn").onclick = () => mOpen();
+let LAST_CUT = null;
+$("#mLabPrint").onclick = () => LAST_CUT && printCut(LAST_CUT);
+$("#mLabPdf").onclick = () => LAST_CUT && pdfCut(LAST_CUT, "#mLabPdf");
 $("#mCutBtn").onclick = async () => {
   const m = parseFloat(toLatin($("#mMeters").value).replace(",","."));
   const order = toLatin($("#mOrder").value).replace(/\D/g,"");
@@ -592,7 +666,9 @@ $("#mCutBtn").onclick = async () => {
   if (!j.ok) { beep(false); msg("#mMsg", j.message, "bad"); return; }
   beep(true); $("#mOrder").value="";
   msg("#mMsg", j.finished ? `تم ✓ قصّيت ${fmtM(m)} م. الرول ${j.roll} خلص — افتح رول جديد.` : `تم ✓ قصّيت ${fmtM(m)} م${order?" للطلب "+order:""}. باقي ${fmtM(j.remaining)} م.`, j.finished?"warn":"ok");
+  LAST_CUT = j; $("#mLab").classList.remove("hide");
   loadMeters(); refreshBar();
+  printCut(j);
 };
 /* ---------- إلغاء بالسكان ---------- */
 const CX = []; let cxBusy=false, cxLast="", cxLastAt=0;
