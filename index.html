@@ -184,7 +184,7 @@ dialog .card{margin:0}
       <button class="btn w" id="mCutBtn">✂ قص وسجّل</button>
     </div>
     <div class="msg" id="mMsg"></div>
-    <div id="mLab" class="row hide" style="margin-top:8px"><button class="btn" id="mLabPrint">🖨 طباعة ملصق القص</button><button class="btn sec" id="mLabPdf">⬇ ملصق القص PDF</button></div>
+    <div id="mLab" class="row hide" style="margin-top:8px"><button class="btn" id="mLabPdf">⬇ ملصق القص PDF</button><button class="btn sec" id="mLabPrint">🖨 طباعة مباشرة</button></div><div class="msg" id="mLabMsg"></div>
     <details id="mOpenNew" style="margin-top:12px"><summary style="cursor:pointer;font-weight:700;color:#0089bd">📦 فتح رول جديد للأمتار</summary>
       <label>امسح ملصق الرول اللي بتفكّه (بجهاز السكان أو الكاميرا)</label>
       <div class="row">
@@ -626,7 +626,7 @@ async function cutLabelHtml(c){
   return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>ملصق قص ${esc(c.order_ref||"")}</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&display=swap"><style>@page{size:100mm 150mm;margin:0}body{margin:0;background:#fff}${CUT_CSS}.lab{width:100mm;height:150mm}</style></head><body><div class="lab">${cutLabelBody(c, v => svgs[String(v)] || "", esc)}</div><script>(document.fonts?document.fonts.ready:Promise.resolve()).then(()=>setTimeout(()=>print(),300))<\/script></body></html>`;
 }
 async function printCut(c){ const h = await cutLabelHtml(c); const w = window.open("","_blank"); if (!w) { msg("#mMsg","المتصفح منع فتح صفحة الطباعة. اسمح بالنوافذ المنبثقة (Pop-ups).","bad"); return; } w.document.open(); w.document.write(h); w.document.close(); }
-async function pdfCut(c, btnSel){ const h = (await cutLabelHtml(c)).replace(/<script>\(document\.fonts[\s\S]*?<\/script>/,""); await htmlToPdf(h, 1, "AVVA-cut-"+(c.order_ref||"x")+"-"+c.cut_id+".pdf", "#mMsg", btnSel); }
+async function pdfCut(c, btnSel){ const h = (await cutLabelHtml(c)).replace(/<script>\(document\.fonts[\s\S]*?<\/script>/,""); await htmlToPdf(h, 1, "AVVA-cut-"+(c.order_ref||"x")+"-"+String(c.meters).replace(".","_")+"m-C"+String(c.cut_id).padStart(6,"0")+".pdf", "#mLabMsg", btnSel); }
 async function cutById(id){ const j = await api("cut_info",{cut_id:id}); if (!j.ok) { msg("#mMsg", j.message, "bad"); return null; } return j; }
 
 document.head.insertAdjacentHTML("beforeend", `<style>.mopen{border-radius:14px;padding:12px 14px;background:linear-gradient(135deg,#0b0b10,#1b2330);color:#fff;margin-bottom:10px}.mopen .k{font-size:12px;color:#9fb3c8}.mopen .r{font-size:38px;font-weight:800;line-height:1.1;color:#00AEEF}.mopen .r small{font-size:16px;color:#fff;font-weight:700}.mbar{height:8px;border-radius:8px;background:#2b3646;overflow:hidden;margin-top:8px}.mbar i{display:block;height:100%;background:#00AEEF}.mchips{display:flex;gap:6px;flex-wrap:wrap}.mchips button{flex:1;min-width:44px;padding:10px 0;border-radius:10px;border:1.5px solid #d9dde3;background:#fff;font:inherit;font-weight:800;font-size:16px;cursor:pointer}.mchips button.on{background:#00AEEF;border-color:#00AEEF;color:#fff}.mcut{display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid #eee;font-size:14px}.mcut.u{opacity:.4;text-decoration:line-through}</style>`);
@@ -637,8 +637,8 @@ async function loadMeters(){
   $("#mOpen").innerHTML = o ? `<div class="k">الرول المفتوح الحين</div><div class="mono" style="direction:ltr;text-align:right;font-weight:700">${esc(o.carton_no)}</div><div class="r">${fmtM(o.remaining)} <small>متر باقي من ${fmtM(o.length_m)}</small></div><div class="mbar"><i style="width:${Math.max(0,Math.min(100,o.remaining/o.length_m*100))}%"></i></div>`
     : `<div class="r" style="font-size:20px;color:#fff">ما فيه رول مفتوح</div><div class="k">افتح رول من «📦 فتح رول جديد للأمتار» تحت.</div>`;
   $("#mCutBox").classList.toggle("hide", !o); if (!o) $("#mOpenNew").open = true;
-  $("#mCuts").innerHTML = (j.cuts||[]).length ? `<div style="font-weight:700;margin-bottom:4px">آخر القصّات</div>` + j.cuts.map(c=>`<div class="mcut${c.undone?" u":""}"><b style="min-width:52px">${fmtM(c.meters)} م</b><span style="flex:1">${c.order_ref?"طلب "+c.order_ref:"بدون طلب"}<br><small class="mono" style="color:var(--mut)">${esc(c.carton_no)}</small></span>${c.undone?"":`<button class="btn sec mP" data-id="${c.id}" style="padding:5px 10px" title="طباعة ملصق القص">🏷</button><button class="btn sec mU" data-id="${c.id}" style="padding:5px 10px">↩ تراجع</button>`}</div>`).join("") : "";
-  document.querySelectorAll(".mP").forEach(b=>b.onclick=async()=>{ const c=await cutById(+b.dataset.id); if (c) { LAST_CUT=c; $("#mLab").classList.remove("hide"); printCut(c); } });
+  $("#mCuts").innerHTML = (j.cuts||[]).length ? `<div style="font-weight:700;margin-bottom:4px">آخر القصّات</div>` + j.cuts.map(c=>`<div class="mcut${c.undone?" u":""}"><b style="min-width:52px">${fmtM(c.meters)} م</b><span style="flex:1">${c.order_ref?"طلب "+c.order_ref:"بدون طلب"}<br><small class="mono" style="color:var(--mut)">${esc(c.carton_no)}</small></span>${c.undone?"":`<button class="btn sec mP" data-id="${c.id}" style="padding:5px 10px" title="حفظ ملصق القص PDF">🏷 PDF</button><button class="btn sec mU" data-id="${c.id}" style="padding:5px 10px">↩ تراجع</button>`}</div>`).join("") : "";
+  document.querySelectorAll(".mP").forEach(b=>b.onclick=async()=>{ const c=await cutById(+b.dataset.id); if (c) { LAST_CUT=c; $("#mLab").classList.remove("hide"); pdfCut(c, "#mLabPdf"); } });
   document.querySelectorAll(".mU").forEach(b=>b.onclick=async()=>{ const x=await api("uncut",{cut_id:+b.dataset.id}); msg("#mMsg", x.ok?"تم التراجع ورجعت الأمتار للرول.":x.message, x.ok?"ok":"bad"); loadMeters(); });
 }
 document.querySelectorAll(".mchips button").forEach(b=>b.onclick=()=>{ document.querySelectorAll(".mchips button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); $("#mMeters").value=b.dataset.m; });
@@ -668,7 +668,7 @@ $("#mCutBtn").onclick = async () => {
   msg("#mMsg", j.finished ? `تم ✓ قصّيت ${fmtM(m)} م. الرول ${j.roll} خلص — افتح رول جديد.` : `تم ✓ قصّيت ${fmtM(m)} م${order?" للطلب "+order:""}. باقي ${fmtM(j.remaining)} م.`, j.finished?"warn":"ok");
   LAST_CUT = j; $("#mLab").classList.remove("hide");
   loadMeters(); refreshBar();
-  printCut(j);
+  pdfCut(j, "#mLabPdf");
 };
 /* ---------- إلغاء بالسكان ---------- */
 const CX = []; let cxBusy=false, cxLast="", cxLastAt=0;
@@ -885,12 +885,12 @@ async function htmlToPdf(srcHtml, n, filename, msgSel, btnSel){
     for (let i=0;i<50 && !fr.contentWindow.html2canvas;i++) await new Promise(r=>setTimeout(r,100));
     try { await Promise.race([fr.contentDocument.fonts.ready, new Promise(r=>setTimeout(r,3000))]); } catch(e){}
     if (!fr.contentWindow.html2canvas) throw new Error("تعذر تحميل مكتبة PDF، تأكد من الإنترنت.");
-    const pdf = new jspdf.jsPDF({ unit:"mm", format:[100,150], orientation:"portrait" });
+    const pdf = new jspdf.jsPDF({ unit:"mm", format:[100,150], orientation:"portrait", compress:true });
     const labs = fr.contentDocument.querySelectorAll(".lab");
     for (let i=0;i<labs.length;i++){
       const c = await fr.contentWindow.html2canvas(labs[i], { scale:3, backgroundColor:"#ffffff" });
       if (i) pdf.addPage([100,150],"portrait");
-      pdf.addImage(c.toDataURL("image/png"), "PNG", 0, 0, 100, 150);
+      pdf.addImage(c.toDataURL("image/png"), "PNG", 0, 0, 100, 150, undefined, "FAST");
       msg(msgSel,"جاري تجهيز ملف PDF... ("+(i+1)+"/"+labs.length+")","warn");
     }
     fr.remove(); pdf.save(filename);
