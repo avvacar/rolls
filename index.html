@@ -180,6 +180,7 @@ dialog .card{margin:0}
       <label>كم متر؟</label>
       <div class="mchips"><button data-m="1">1</button><button data-m="1.5">1.5</button><button data-m="2">2</button><button data-m="3" class="on">3</button><button data-m="4">4</button><button data-m="5">5</button></div>
       <input id="mMeters" class="ltr" inputmode="decimal" value="3" style="margin-top:8px;font-size:20px;text-align:center;font-weight:700">
+      <div id="mAct" style="text-align:center;font-size:14px;color:#0089bd;margin-top:4px"></div>
       <div style="height:10px"></div>
       <button class="btn w" id="mCutBtn">✂ قص وسجّل</button>
     </div>
@@ -571,8 +572,9 @@ let qT;
 .cl .tk b{display:block;font-size:3.4mm;font-weight:800}.cl .tk i{display:block;font-style:normal;font-size:1.9mm;letter-spacing:.6mm;direction:ltr}
 .cl .big{position:relative;display:flex;align-items:center;justify-content:center;gap:4mm;padding:2.4mm 3mm 1.6mm}
 .cl .mm{display:flex;align-items:baseline;gap:1.6mm;direction:rtl}
-.cl .mm .n{font-family:"Cairo",Arial,sans-serif;font-size:30mm;font-weight:800;line-height:.9;letter-spacing:-.6mm;direction:ltr}
-.cl .mm .u{font-size:7mm;font-weight:800}
+.cl .mm .n{font-family:"Cairo",Arial,sans-serif;font-size:28mm;font-weight:800;line-height:.9;letter-spacing:-.6mm;direction:ltr}
+.cl .mm .u{font-size:7mm;font-weight:800;display:flex;flex-direction:column;line-height:1.05}.cl .mm .u small{font-size:2.6mm;font-weight:700;color:#333}
+.cl .dim .xt{font-size:2.5mm;font-weight:800;border:.35mm solid #000;border-radius:1.4mm;padding:.1mm 1.4mm}
 .cl .dim{display:flex;flex-direction:column;align-items:center;gap:.6mm;border-inline-start:.4mm solid #000;padding-inline-start:4mm}
 .cl .dim .k{font-size:2.3mm;color:#333}.cl .dim .v{font-family:Consolas,monospace;font-size:3.6mm;font-weight:700;direction:ltr;white-space:nowrap}
 .cl .dim .f{font-size:2.6mm;font-weight:700;direction:ltr}.cl .dim .fa{font-size:2.6mm;font-weight:700}
@@ -604,14 +606,14 @@ function cutWhen(at){
   return { date: f({ day: "2-digit", month: "2-digit", year: "numeric" }), time: f({ hour: "2-digit", minute: "2-digit", hour12: false }) };
 }
 function cutLabelBody(c, bar, e){
-  const m = +Number(c.meters).toFixed(2), L = +Number(c.length_m || 15).toFixed(2);
+  const m = +Number(c.meters).toFixed(2), L = +Number(c.length_m || 15).toFixed(2), ordm = +Number(c.ordered != null ? c.ordered : c.meters).toFixed(2), extra = Math.round((m - ordm) * 100);
   const rem = c.remaining == null ? null : Math.max(0, +Number(c.remaining).toFixed(2));
   const used = rem == null ? 0 : Math.max(0, L - rem - m), pctUsed = Math.min(100, used / L * 100), pctCut = Math.min(100 - pctUsed, m / L * 100);
   const w = cutWhen(c.at), no = "C-" + String(c.cut_id || 0).padStart(6, "0");
   return `<div class="cl"><div class="fr"><div class="wm">${CUT_WM}</div>
   <div class="hd"><div class="lg"><div class="lb">A<b>VV</b>A CAR</div><div class="tg">SMART PPF PROTECTION</div></div><div class="tk"><b>ملصق قص أمتار</b><i>CUT TICKET</i></div></div>
-  <div class="big"><div class="mm"><span class="n">${e(m)}</span><span class="u">متر</span></div>
-    <div class="dim"><span class="k">المقاس</span><span class="v">1.52M × ${e(m)}M</span><span class="f">Gloss Clear</span><span class="fa">شفاف لامع</span></div></div>
+  <div class="big"><div class="mm"><span class="n">${e(ordm)}</span><span class="u">متر<small>المطلوب</small></span></div>
+    <div class="dim"><span class="k">المقصوص فعلياً</span><span class="v">1.52M × ${e(m)}M</span>${extra > 0 ? `<span class="xt">+${e(extra)} سم احتياط</span>` : ""}<span class="f">Gloss Clear</span><span class="fa">شفاف لامع</span></div></div>
   <div class="ob">${c.order_ref ? `<div class="kv"><span class="cu">${e(c.customer_name || "—")}${c.city ? " · " + e(c.city) : ""}</span><span class="no"><i>رقم الطلب</i>${e(c.order_ref)}</span></div><div class="bc">${bar(String(c.order_ref))}</div>` : `<div class="kv"><span class="cu">بدون طلب</span><span class="no">—</span></div>`}</div>
   <div class="gr"><div><span class="k">تاريخ القص</span><span class="v">${e(w.date)}</span></div><div><span class="k">الوقت</span><span class="v">${e(w.time)}</span></div></div>
   <div class="rl"><div class="kv" style="width:100%"><span class="k">انقص من الرول</span><span class="rn">${e(c.roll || "—")}</span></div>${c.roll ? `<div class="rb">${bar(c.roll)}</div>` : ""}</div>
@@ -637,12 +639,15 @@ async function loadMeters(){
   $("#mOpen").innerHTML = o ? `<div class="k">الرول المفتوح الحين</div><div class="mono" style="direction:ltr;text-align:right;font-weight:700">${esc(o.carton_no)}</div><div class="r">${fmtM(o.remaining)} <small>متر باقي من ${fmtM(o.length_m)}</small></div><div class="mbar"><i style="width:${Math.max(0,Math.min(100,o.remaining/o.length_m*100))}%"></i></div>`
     : `<div class="r" style="font-size:20px;color:#fff">ما فيه رول مفتوح</div><div class="k">افتح رول من «📦 فتح رول جديد للأمتار» تحت.</div>`;
   $("#mCutBox").classList.toggle("hide", !o); if (!o) $("#mOpenNew").open = true;
-  $("#mCuts").innerHTML = (j.cuts||[]).length ? `<div style="font-weight:700;margin-bottom:4px">آخر القصّات</div>` + j.cuts.map(c=>`<div class="mcut${c.undone?" u":""}"><b style="min-width:52px">${fmtM(c.meters)} م</b><span style="flex:1">${c.order_ref?"طلب "+c.order_ref:"بدون طلب"}<br><small class="mono" style="color:var(--mut)">${esc(c.carton_no)}</small></span>${c.undone?"":`<button class="btn sec mP" data-id="${c.id}" style="padding:5px 10px" title="حفظ ملصق القص PDF">🏷 PDF</button><button class="btn sec mU" data-id="${c.id}" style="padding:5px 10px">↩ تراجع</button>`}</div>`).join("") : "";
+  $("#mCuts").innerHTML = (j.cuts||[]).length ? `<div style="font-weight:700;margin-bottom:4px">آخر القصّات</div>` + j.cuts.map(c=>`<div class="mcut${c.undone?" u":""}"><b style="min-width:62px;line-height:1.2">${fmtM(c.ordered_m ?? c.meters)} م<br><small style="font-weight:400;color:var(--mut)">قُص ${fmtM(c.meters)}</small></b><span style="flex:1">${c.order_ref?"طلب "+c.order_ref:"بدون طلب"}<br><small class="mono" style="color:var(--mut)">${esc(c.carton_no)}</small></span>${c.undone?"":`<button class="btn sec mP" data-id="${c.id}" style="padding:5px 10px" title="حفظ ملصق القص PDF">🏷 PDF</button><button class="btn sec mU" data-id="${c.id}" style="padding:5px 10px">↩ تراجع</button>`}</div>`).join("") : "";
   document.querySelectorAll(".mP").forEach(b=>b.onclick=async()=>{ const c=await cutById(+b.dataset.id); if (c) { LAST_CUT=c; $("#mLab").classList.remove("hide"); pdfCut(c, "#mLabPdf"); } });
   document.querySelectorAll(".mU").forEach(b=>b.onclick=async()=>{ const x=await api("uncut",{cut_id:+b.dataset.id}); msg("#mMsg", x.ok?"تم التراجع ورجعت الأمتار للرول.":x.message, x.ok?"ok":"bad"); loadMeters(); });
 }
-document.querySelectorAll(".mchips button").forEach(b=>b.onclick=()=>{ document.querySelectorAll(".mchips button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); $("#mMeters").value=b.dataset.m; });
-$("#mMeters").oninput = () => document.querySelectorAll(".mchips button").forEach(x=>x.classList.toggle("on", x.dataset.m===toLatin($("#mMeters").value)));
+document.querySelectorAll(".mchips button").forEach(b=>b.onclick=()=>{ document.querySelectorAll(".mchips button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); $("#mMeters").value=b.dataset.m; mActUpd(); });
+const MARGIN = 0.10, actOf = o => Math.round(o * (1 + MARGIN) * 100) / 100;
+function mActUpd(){ const o = parseFloat(toLatin($("#mMeters").value).replace(",",".")); $("#mAct").innerHTML = o > 0 ? `ينقص فعلياً من الرول: <b>${fmtM(actOf(o))} م</b> (${fmtM(o)} م + ${Math.round((actOf(o)-o)*100)} سم احتياط)` : ""; }
+$("#mMeters").oninput = () => { document.querySelectorAll(".mchips button").forEach(x=>x.classList.toggle("on", x.dataset.m===toLatin($("#mMeters").value))); mActUpd(); };
+setTimeout(mActUpd, 0);
 $("#mOrderScan").onclick = () => scanInto("#camMOrder", code => { $("#mOrder").value = toLatin(code).replace(/\D/g,""); });
 $("#mRollScan").onclick = () => scanInto("#camMRoll", code => { $("#mRoll").value = fixScan(code); mOpen(); });
 gunInput($("#mRoll"), v => { $("#mRoll").value = fixScan(v); mOpen(); });
@@ -665,7 +670,8 @@ $("#mCutBtn").onclick = async () => {
   $("#mCutBtn").disabled = true; const j = await api("cut",{meters:m, order}); $("#mCutBtn").disabled = false;
   if (!j.ok) { beep(false); msg("#mMsg", j.message, "bad"); return; }
   beep(true); $("#mOrder").value="";
-  msg("#mMsg", j.finished ? `تم ✓ قصّيت ${fmtM(m)} م. الرول ${j.roll} خلص — افتح رول جديد.` : `تم ✓ قصّيت ${fmtM(m)} م${order?" للطلب "+order:""}. باقي ${fmtM(j.remaining)} م.`, j.finished?"warn":"ok");
+  const cm = `${fmtM(j.ordered)} م (المقصوص فعلياً ${fmtM(j.meters)} م)`;
+  msg("#mMsg", j.finished ? `تم ✓ قصّيت ${cm}. الرول ${j.roll} خلص — افتح رول جديد.` : `تم ✓ قصّيت ${cm}${order?" للطلب "+order:""}. باقي في الرول ${fmtM(j.remaining)} م.`, j.finished?"warn":"ok");
   LAST_CUT = j; $("#mLab").classList.remove("hide");
   loadMeters(); refreshBar();
   pdfCut(j, "#mLabPdf");
