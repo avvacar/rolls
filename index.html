@@ -541,7 +541,7 @@ async function cxHandle(raw){
   cxLast=key; cxLastAt=Date.now(); cxBusy=true;
   try {
     const g = await api("get",{roll:key});
-    if (!g.ok) { beep(false); msg("#cxMsg","هذا الباركود مو مسجّل في المستودع: "+key,"bad"); return; }
+    if (!g.ok) { beep(false); const m=$("#cxMsg"); m.className="msg bad"; m.style.display="block"; m.innerHTML=`هذا الباركود مو مسجّل في المستودع.<br>الجهاز قرأ: <b class="mono" style="direction:ltr;display:inline-block;word-break:break-all">${esc(String(raw))}</b>`; return; }
     const r = g.roll;
     if (r.status==="damaged") { beep(false); msg("#cxMsg",`${r.carton_no} ملغي من قبل.`,"warn"); return; }
     if (r.status==="assigned"||r.status==="installed") { beep(false); msg("#cxMsg",`${r.carton_no} مصروف للطلب ${r.order_ref} — ما ألغيته. لو فعلاً غلط كلمني.`,"bad"); return; }
@@ -562,7 +562,7 @@ function gunInput(el, onScan){
     if (e.key==="Enter" || e.code==="Enter" || e.code==="NumpadEnter" || e.key==="Tab") { e.preventDefault(); const v=buf.trim(); buf=""; el.value=""; if (v) onScan(v); return; }
     if (e.code==="Backspace") { e.preventDefault(); buf=buf.slice(0,-1); el.value=buf; return; }
     let ch = null; const c = e.code||"";
-    if (e.key && e.key.length===1 && e.key.charCodeAt(0)>=32 && e.key.charCodeAt(0)<127) ch = e.key;
+    if (e.key && e.key.length===1 && e.key.charCodeAt(0)>=32 && e.key.charCodeAt(0)<127) { ch = e.key; if (/[a-z]/i.test(ch) && e.getModifierState && e.getModifierState("CapsLock")) ch = ch===ch.toUpperCase() ? ch.toLowerCase() : ch.toUpperCase(); }
     else if (/^Key[A-Z]$/.test(c)) ch = e.shiftKey ? c[3] : c[3].toLowerCase();
     else if (/^Digit\d$/.test(c)) ch = e.shiftKey ? DSH[+c[5]] : c[5];
     else if (/^Numpad\d$/.test(c)) ch = c[6];
