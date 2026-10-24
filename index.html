@@ -535,7 +535,9 @@ function cxRender(){
   $("#cxList").innerHTML = CX.map((x,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #eee;${x.undone?"opacity:.45":""}"><span style="flex:1"><b class="mono" style="direction:ltr;display:inline-block">${esc(x.carton_no)}</b><br><small style="color:var(--mut)">${esc(x.code)}${x.undone?" · رجع للمخزون":" · ملغي ✓"}</small></span>${x.undone?"":`<button class="btn sec cxU" data-i="${i}" style="padding:6px 12px">↩ تراجع</button>`}</div>`).reverse().join("");
   document.querySelectorAll(".cxU").forEach(b=>b.onclick=async()=>{ const x=CX[+b.dataset.i]; const j=await api("set_status",{roll:x.code,status:"in_stock",note:""}); if(!j.ok){ msg("#cxMsg",j.message,"bad"); return; } x.undone=true; cxRender(); refreshBar(); msg("#cxMsg",`رجّعت ${x.carton_no} للمخزون.`,"ok"); });
 }
+function fixScan(raw){ let t=String(raw||"").trim(); const m=/^A.{2}A(?=-?\d)/i.exec(t); if (m && !/^AVVA/i.test(t) && !/r\.html/.test(t)) t="AVVA"+t.slice(4); return t; }
 async function cxHandle(raw){
+  raw = fixScan(raw);
   const key = rollKey(raw); if (!key) return;
   if (key===cxLast && Date.now()-cxLastAt<4000) return;
   cxLast=key; cxLastAt=Date.now(); cxBusy=true;
@@ -562,11 +564,15 @@ function gunInput(el, onScan){
     if (e.key==="Enter" || e.code==="Enter" || e.code==="NumpadEnter" || e.key==="Tab") { e.preventDefault(); const v=buf.trim(); buf=""; el.value=""; if (v) onScan(v); return; }
     if (e.code==="Backspace") { e.preventDefault(); buf=buf.slice(0,-1); el.value=buf; return; }
     let ch = null; const c = e.code||"";
-    if (e.key && e.key.length===1 && e.key.charCodeAt(0)>=32 && e.key.charCodeAt(0)<127) { ch = e.key; if (/[a-z]/i.test(ch) && e.getModifierState && e.getModifierState("CapsLock")) ch = ch===ch.toUpperCase() ? ch.toLowerCase() : ch.toUpperCase(); }
-    else if (/^Key[A-Z]$/.test(c)) ch = e.shiftKey ? c[3] : c[3].toLowerCase();
+    const asc = e.key && e.key.length===1 && e.key.charCodeAt(0)>=32 && e.key.charCodeAt(0)<127;
+    if (/^Key[A-Z]$/.test(c)) { /* الحرف من الزر الفعلي (الكيبورد العربي يطلع { بدل V) */
+      let up = e.shiftKey;
+      if (asc && /[a-z]/i.test(e.key)) { up = e.key===e.key.toUpperCase(); if (e.getModifierState && e.getModifierState("CapsLock")) up = !up; }
+      ch = up ? c[3] : c[3].toLowerCase(); }
     else if (/^Digit\d$/.test(c)) ch = e.shiftKey ? DSH[+c[5]] : c[5];
     else if (/^Numpad\d$/.test(c)) ch = c[6];
     else if (KMAP[c]) ch = KMAP[c][e.shiftKey?1:0];
+    else if (asc) ch = e.key;
     if (ch!==null) { e.preventDefault(); buf+=ch; el.value=buf; }
   });
   el.addEventListener("paste", e => { const t=(e.clipboardData||window.clipboardData).getData("text"); if (t) { e.preventDefault(); el.value=""; buf=""; onScan(t.trim()); } });
