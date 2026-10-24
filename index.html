@@ -174,7 +174,9 @@ dialog .card{margin:0}
   <div class="card" style="border:1.5px solid #f3c4c4">
     <h2 style="margin:0 0 4px">🗑 إلغاء ملصقات غلط بالسكان</h2>
     <p style="color:var(--mut);margin:0 0 10px;font-size:14px">شغّل الكاميرا ووجّهها على باركود أو QR الملصق الغلط. أول ما يقرأه يلغيه على طول ويطلع من المخزون. الكاميرا تبقى شغّالة للي بعده.</p>
-    <button class="btn w" id="cxStart" style="background:#c62828;color:#fff">📷 ابدأ الإلغاء بالسكان</button>
+    <label style="font-weight:700">🔫 بجهاز السكان: اضغط داخل المربع وامسح</label>
+    <input id="cxGun" class="ltr" autocomplete="off" placeholder="امسح الملصق بجهاز السكان هنا" style="font-size:18px;border:2px dashed #c62828;text-align:center;margin-bottom:10px">
+    <button class="btn w" id="cxStart" style="background:#c62828;color:#fff">📷 أو بالكاميرا: ابدأ الإلغاء</button>
     <button class="btn w sec hide" id="cxStop">⏹ إيقاف الكاميرا</button>
     <div class="cam" id="camCancel" style="margin-top:8px"><video playsinline muted></video><div class="hint">وجّه الكاميرا على باركود الملصق الغلط</div></div>
     <div class="msg" id="cxMsg"></div>
@@ -272,7 +274,7 @@ function tab(t){
   document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.t===t));
   ["in","out","stock","print"].forEach(x => $("#t-"+x).classList.toggle("hide", x!==t));
   stopAll();
-  if (t==="stock") loadStock(); if (t==="print") loadPrint();
+  if (t==="stock") { loadStock(); setTimeout(()=>{ const g=document.getElementById("cxGun"); if(g) g.focus(); },100); } if (t==="print") loadPrint();
 }
 document.querySelectorAll("nav button").forEach(b => b.onclick = () => tab(b.dataset.t));
 
@@ -549,6 +551,27 @@ async function cxHandle(raw){
     msg("#cxMsg",`ألغيت ✓ ${r.carton_no}`,"ok");
   } finally { cxBusy=false; }
 }
+
+/* جهاز السكان (يكتب ككيبورد): نقرأ الزر الفعلي بدل الحرف عشان يشتغل حتى لو الكيبورد عربي */
+const KMAP = {Minus:["-","_"],Equal:["=","+"],Period:[".",">"],Comma:[",","<"],Slash:["/","?"],Semicolon:[";",":"],Quote:["'",'"'],BracketLeft:["[","{"],BracketRight:["]","}"],Backslash:["\\","|"],Backquote:["`","~"],Space:[" "," "],NumpadSubtract:["-","-"],NumpadDecimal:[".","."],NumpadDivide:["/","/"],NumpadAdd:["+","+"]};
+const DSH = ")!@#$%^&*(";
+function gunInput(el, onScan){
+  let buf = "";
+  el.addEventListener("keydown", e => {
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
+    if (e.key==="Enter" || e.code==="Enter" || e.code==="NumpadEnter" || e.key==="Tab") { e.preventDefault(); const v=buf.trim(); buf=""; el.value=""; if (v) onScan(v); return; }
+    if (e.code==="Backspace") { e.preventDefault(); buf=buf.slice(0,-1); el.value=buf; return; }
+    let ch = null; const c = e.code||"";
+    if (e.key && e.key.length===1 && e.key.charCodeAt(0)>=32 && e.key.charCodeAt(0)<127) ch = e.key;
+    else if (/^Key[A-Z]$/.test(c)) ch = e.shiftKey ? c[3] : c[3].toLowerCase();
+    else if (/^Digit\d$/.test(c)) ch = e.shiftKey ? DSH[+c[5]] : c[5];
+    else if (/^Numpad\d$/.test(c)) ch = c[6];
+    else if (KMAP[c]) ch = KMAP[c][e.shiftKey?1:0];
+    if (ch!==null) { e.preventDefault(); buf+=ch; el.value=buf; }
+  });
+  el.addEventListener("paste", e => { const t=(e.clipboardData||window.clipboardData).getData("text"); if (t) { e.preventDefault(); el.value=""; buf=""; onScan(t.trim()); } });
+}
+gunInput($("#cxGun"), async v => { cxLast=""; await cxHandle(v); $("#cxGun").focus(); });
 $("#cxStart").onclick = async () => {
   const box=$("#camCancel"); let v;
   try { v = await openCam(box); } catch(e){ alert("ما قدرت أفتح الكاميرا. تأكد إنك سمحت للمتصفح يستخدمها."); return; }
