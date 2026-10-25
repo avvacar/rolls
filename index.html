@@ -106,6 +106,10 @@ dialog .card{margin:0}
 
 <!-- ============ إدخال ============ -->
 <section id="t-in">
+  <div class="card filmpick" style="padding:10px 12px">
+    <div style="font-weight:700;margin-bottom:6px">نوع الرولات اللي تمسحها الحين:</div>
+    <div class="fp"><button data-f="شفاف لامع" class="on"><i style="background:linear-gradient(135deg,#e9f6fb,#fff);"></i>شفاف لامع</button><button data-f="أسود لامع"><i style="background:#111"></i>أسود لامع</button></div>
+  </div>
   <div class="card" style="padding:12px">
     <div class="cam" id="camIn"><video playsinline muted></video><div class="guide"></div><div class="camtools"><button id="torchBtn" class="hide" type="button">🔦 فلاش</button><button id="zoomBtn" class="hide" type="button">🔍 تقريب</button></div><div class="hint" id="camHint" style="font-size:15px;font-weight:700">خلّ سطر ROLL NO داخل الإطار</div></div>
     <button class="btn w" id="ocrStart" style="font-size:20px;padding:18px">📷 ابدأ المسح</button>
@@ -433,7 +437,7 @@ async function saveRoll(){
   const p = parseCarton($("#carton").value);
   if (!p) { beep(false); msg("#addMsg","رقم الرول غير مكتمل. لازم يكون مثل AVVA-5201.01092026-129","bad"); return; }
   $("#addBtn").disabled = true;
-  const j = await api("add", { carton_no: p.full, inner_code: $("#inner").value.trim() });
+  const j = await api("add", { carton_no: p.full, inner_code: $("#inner").value.trim(), film: FILM });
   $("#addBtn").disabled = false;
   if (!j.ok) { beep(false); msg("#addMsg", j.message, "bad"); return; }
   store.set("avva_rolls_prefix", p.prefix);
@@ -449,7 +453,7 @@ let BLANK_IDS = new Set();
 $("#blankBtn").onclick = async () => {
   const n = parseInt(toLatin($("#blankN").value).replace(/\D/g,""),10);
   if (!n || n<1 || n>300) { msg("#blankMsg","اكتب عدد من 1 إلى 300.","bad"); return; }
-  $("#blankBtn").disabled = true; const j = await api("add_blank", { count:n, prefix: $("#blankPrefix").value.trim() }); $("#blankBtn").disabled = false;
+  $("#blankBtn").disabled = true; const j = await api("add_blank", { count:n, prefix: $("#blankPrefix").value.trim(), film: FILM }); $("#blankBtn").disabled = false;
   if (!j.ok) { msg("#blankMsg", j.message, "bad"); return; }
   beep(true); SESS += j.rows.length; $("#sbSess").textContent = SESS; refreshBar();
   BLANK_IDS = new Set(j.rows.map(r=>r.id));
@@ -491,7 +495,7 @@ async function barcodeSvg(val){
 }
 async function orderLabelHtml(o){
   const bc = await barcodeSvg(o.order), rbc = await barcodeSvg(o.roll.carton_no), qr = qrBrand(VURL(o.roll.token));
-  const sp = ROLL_SPECS[o.roll.product_code] || { type: o.roll.film || "PPF" };
+  const sp = specOf(o.roll);
   const specs = [sp.material, sp.glue, sp.thickness, sp.size].filter(Boolean).map(esc).join(" · ");
   return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>ملصق طلب ${esc(o.order)}</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&display=swap"><style>
 @page{size:100mm 150mm;margin:0}*{box-sizing:border-box}body{margin:0;font-family:"Cairo",Tahoma,"Segoe UI",Arial,sans-serif;color:#000;background:#fff}
@@ -560,6 +564,14 @@ $("#olPdf").onclick = async () => { if (!LAST_OUT) return; try { const h = await
 let qT;
 
 
+
+/* ---------- نوع الفلم للإدخال ---------- */
+let FILM = "شفاف لامع";
+try { const f = localStorage.getItem("avva_rolls_film"); if (f) FILM = f; } catch(e){}
+document.head.insertAdjacentHTML("beforeend", `<style>.filmpick .fp{display:flex;gap:8px}.filmpick .fp button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 8px;border-radius:12px;border:2px solid #d9dde3;background:#fff;font:inherit;font-weight:800;font-size:17px;cursor:pointer;color:#333}.filmpick .fp button i{width:22px;height:22px;border-radius:6px;border:1.5px solid #999;display:inline-block}.filmpick .fp button.on{border-color:#00AEEF;box-shadow:0 0 0 3px rgba(0,174,239,.18);color:#000}.filmpick .fp button[data-f="أسود لامع"].on{border-color:#111;background:#111;color:#fff}</style>`);
+function filmUI(){ document.querySelectorAll(".filmpick .fp button").forEach(b => b.classList.toggle("on", b.dataset.f === FILM)); }
+document.querySelectorAll(".filmpick .fp button").forEach(b => b.onclick = () => { FILM = b.dataset.f; try { localStorage.setItem("avva_rolls_film", FILM); } catch(e){} filmUI(); });
+filmUI();
 /* ---------- قص أمتار ---------- */const CUT_CSS = `.cl{box-sizing:border-box;width:100mm;height:150mm;padding:4mm;display:flex;flex-direction:column;overflow:hidden;font-family:"Cairo","IBM Plex Sans Arabic",Tahoma,Arial,sans-serif;color:#000;background:#fff}
 .cl *{box-sizing:border-box}
 .cl .fr{position:relative;flex:1;border:.7mm solid #000;border-radius:3.5mm;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;padding-bottom:.6mm}
@@ -791,6 +803,7 @@ async function loadPrint(){
     if (r.batch && r.batch===ddmm(r.created_at)) { const hm=new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Riyadh",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date(r.created_at)); k="b:"+bk+":"+hm; title=`كراتين بدون ملصق — أُضيفت ${dOf(r.batch)} الساعة ${hm}`; sub=`AVVA-${bk}`; }
     else if (cnt[bk]>=3) { k="f:"+bk; title="رولات المصنع"; sub=`AVVA-${bk}`; }
     else { k="m"; title="قراءات تحتاج مراجعة"; sub="أرقام قرأتها الكاميرا غلط"; }
+    { const fb = isBlack(r); k += fb ? "|black" : "|clear"; title += fb ? " · ⚫ أسود لامع" : " · شفاف لامع"; }
     const g = (groups[k] ||= {k, title, sub, rows:[], last:""}); g.rows.push(i); if (k.startsWith("b:")) g.sub = `AVVA-${bk}-${PROWS[g.rows[0]].seq} … ${r.seq}`; if ((r.created_at||"")>g.last) g.last=r.created_at||"";
   });
   const list = Object.values(groups).sort((a,b)=> (a.k==="m")-(b.k==="m") || b.last.localeCompare(a.last));
@@ -837,9 +850,11 @@ const AVVA_WM = `<svg viewBox="0 0 100 116" xmlns="http://www.w3.org/2000/svg"><
 function qrBrand(text){ const q=qrcode(0,"H"); q.addData(text); q.make(); return `<div class="qrb">${q.createSvgTag({cellSize:4,margin:1,scalable:true})}<div class="qrm">${AVVA_MARK}</div></div>`; }
 const MICRO = n => `<div class="micro">${Array(n*3).fill("AVVA CAR ◆ GENUINE ◆").join(" ")}</div>`;
 const ROLL_SPECS = { "5201": { type:"Gloss Clear", ar:"شفاف لامع", material:"LUBRIZOL", glue:"ASHLAND", thickness:"8.5 mil", size:"1.52M × 15M" } };
+const isBlack = r => /أسود|اسود|black/i.test(String((r && r.film) || ""));
+function specOf(r){ const base = ROLL_SPECS[r && r.product_code] || { type: (r && r.film) || "PPF" }; return isBlack(r) ? Object.assign({}, base, { type:"Gloss Black", ar:"أسود لامع" }) : base; }
 async function labelsHtml(rows, ph){
   const bcs = {}; for (const r of rows) bcs[r.carton_no] = ph ? '<div id="phBc" style="width:84mm;height:13mm"></div>' : await barcodeSvg(r.carton_no);
-  const lab = r => { const u = VURL(r.token); const sp = ROLL_SPECS[r.product_code] || { type: r.film || "PPF" };
+  const lab = r => { const u = VURL(r.token); const sp = specOf(r);
     const cell = (k, v) => v ? `<div class="sc"><span>${k}</span><b>${esc(v)}</b></div>` : "";
     return `<div class="lab"><div class="top"><div class="wm">${AVVA_WM}</div>
 <div class="hd"><div class="lb">A<b>VV</b>A CAR</div><div class="tg">SMART PPF PROTECTION</div></div>
@@ -918,7 +933,7 @@ async function fastLabelsPdf(rows){
     msg("#printMsg","جاري تجهيز ملف PDF...","warn");
     await Promise.all([loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"), loadScript("https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js")]);
     const H2C = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
-    const groups = {}; rows.forEach(r => (groups[r.product_code || "_"] = groups[r.product_code || "_"] || []).push(r));
+    const groups = {}; rows.forEach(r => { const k = (r.product_code || "_") + "|" + (isBlack(r) ? "black" : "clear"); (groups[k] = groups[k] || []).push(r); });
     const tpl = {};
     for (const key of Object.keys(groups)) {
       const html = (await labelsHtml([groups[key][0]], true)).replace(/<script>setTimeout\(\(\)=>print\(\),400\)<\/script>/,"").replace('<div class="hint">','<div class="hint" style="display:none">').replace("</head>",'<script src="'+H2C+'"><\/script></head>');
@@ -935,9 +950,9 @@ async function fastLabelsPdf(rows){
     }
     const pdf = new jspdf.jsPDF({ unit:"mm", format:[100,150], orientation:"portrait", compress:true });
     rows.forEach((r, i) => {
-      const T = tpl[r.product_code || "_"];
+      const T = tpl[(r.product_code || "_") + "|" + (isBlack(r) ? "black" : "clear")];
       if (i) pdf.addPage([100,150], "portrait");
-      pdf.addImage(T.img, "JPEG", 0, 0, 100, 150, "tpl_" + (r.product_code || "_"), "FAST");
+      pdf.addImage(T.img, "JPEG", 0, 0, 100, 150, "tpl_" + (r.product_code || "_") + (isBlack(r) ? "_b" : "_c"), "FAST");
       pdf.setFillColor(0,0,0);
       // roll number
       pdf.setFont("courier", "bold"); let fs = 22; pdf.setFontSize(fs);
