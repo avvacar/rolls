@@ -240,6 +240,8 @@ dialog .card{margin:0}
       <button class="btn sec" id="printBtn">🖨 طباعة مباشرة</button>
       <button class="btn sec" id="markBtn">تعليم المحدد كمطبوع</button>
     </div>
+    <div class="pfilm"><button id="pfBlack" data-f="black">⚫ الأسود <b id="cfB">0</b></button><button id="pfClear" data-f="clear">⚪ الشفاف <b id="cfC">0</b></button></div>
+    <div class="psel" id="psel"></div>
     <div class="pseg"><button id="segNew" class="on">🆕 جديد — ما انطبع <b id="cNew">0</b></button><button id="segDone">✓ مطبوع <b id="cDone">0</b></button></div>
     <div class="msg" id="printMsg"></div>
     <div id="pgroups"></div>
@@ -789,16 +791,29 @@ async function manage(code){
 }
 
 /* ---------- الطباعة ---------- */
-let PROWS = [], PALL = [], PSEG = "new";
+let PROWS = [], PALL = [], PSEG = "new", PFILM = "black";
+try { const f = localStorage.getItem("avva_print_film"); if (f === "black" || f === "clear") PFILM = f; } catch(e){}
+document.head.insertAdjacentHTML("beforeend", `<style>.pfilm{display:flex;gap:10px;margin:12px 0 6px}.pfilm button{flex:1;padding:16px 10px;border-radius:14px;border:2px solid #d9dde3;background:#fff;font:inherit;font-size:19px;font-weight:800;cursor:pointer;color:#333}.pfilm button b{display:inline-block;min-width:30px;padding:2px 9px;margin-inline-start:6px;border-radius:20px;background:#eef1f4;font-size:15px}.pfilm #pfBlack.on{background:#0a0a0f;border-color:#0a0a0f;color:#fff}.pfilm #pfBlack.on b{background:#00d4ff;color:#0a0a0f}.pfilm #pfClear.on{background:#e9f6fb;border-color:#00AEEF;color:#0089bd}.pfilm #pfClear.on b{background:#00AEEF;color:#fff}.psel{border-radius:12px;padding:10px 14px;font-weight:700;font-size:15px;margin-bottom:4px}.psel.on{background:#eafaf1;color:#1b5e20;border:1.5px solid #8bd3a6}.psel.off{background:#f6f7f9;color:#666;border:1.5px dashed #d9dde3}</style>`);
+const filmOf = r => isBlack(r) ? "black" : "clear";
+function pselUpdate(){
+  const n = document.querySelectorAll(".pc:checked").length, nm = PFILM === "black" ? "أسود" : "شفاف", el = $("#psel");
+  if (!el) return;
+  el.className = "psel " + (n ? "on" : "off");
+  el.innerHTML = n ? `محدد <b>${n}</b> ملصق ${nm} ✓ — اضغط <b>«⬇ حفظ PDF»</b> فوق` : (PSEG==="new" ? `ما فيه ملصقات ${nm} جديدة.` : "حط صح ✓ على الملصقات اللي تبي تعيد طباعتها.");
+}
 const PCSS = `<style>.pseg{display:flex;gap:6px;margin:12px 0 4px}.pseg button{flex:1;padding:11px 8px;border-radius:12px;border:1.5px solid #d9dde3;background:#fff;font:inherit;font-weight:700;cursor:pointer;color:#555}.pseg button b{display:inline-block;min-width:26px;padding:1px 7px;margin-inline-start:4px;border-radius:20px;background:#eef1f4;font-size:13px}.pseg button.on{border-color:#00AEEF;background:#00AEEF;color:#fff}.pseg button.on b{background:#fff;color:#0089bd}.pgrp{border:1.5px solid #e3e6ea;border-radius:14px;margin-top:10px;overflow:hidden}.pgh{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#f6f8fa;cursor:pointer;font-weight:700}.pgh input{width:20px;height:20px}.pgh .t{flex:1}.pgh .t small{display:block;font-weight:400;color:var(--mut);font-size:12px;direction:ltr;text-align:right}.pgh .n{background:#111;color:#fff;border-radius:20px;padding:2px 10px;font-size:13px}.pgb{max-height:260px;overflow:auto;display:none}.pgrp.open .pgb{display:block}.pgb table{margin:0}.pgx{font-size:12px;color:#0089bd;background:none;border:0;cursor:pointer;font:inherit;font-size:12px}</style>`;
 document.head.insertAdjacentHTML("beforeend", PCSS);
 async function loadPrint(){
   const j = await api("list", { limit: 1000 });
   PALL = (j.rows||[]).filter(r=>r.status!=="damaged").sort((a,b)=>a.carton_no.localeCompare(b.carton_no));
-  $("#cNew").textContent = PALL.filter(r=>!r.printed_at).length;
-  $("#cDone").textContent = PALL.filter(r=>r.printed_at).length;
+  const inSeg = r => PSEG==="new" ? !r.printed_at : !!r.printed_at;
+  $("#cfB").textContent = PALL.filter(r => inSeg(r) && filmOf(r)==="black").length;
+  $("#cfC").textContent = PALL.filter(r => inSeg(r) && filmOf(r)==="clear").length;
+  $("#pfBlack").classList.toggle("on", PFILM==="black"); $("#pfClear").classList.toggle("on", PFILM==="clear");
+  $("#cNew").textContent = PALL.filter(r=>!r.printed_at && filmOf(r)===PFILM).length;
+  $("#cDone").textContent = PALL.filter(r=>r.printed_at && filmOf(r)===PFILM).length;
   $("#segNew").classList.toggle("on", PSEG==="new"); $("#segDone").classList.toggle("on", PSEG==="done");
-  PROWS = PALL.filter(r => PSEG==="new" ? !r.printed_at : !!r.printed_at);
+  PROWS = PALL.filter(r => inSeg(r) && filmOf(r)===PFILM);
   const ddmm = t => { const d=new Date(t||0); const f=x=>new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Riyadh",[x]:x==="year"?"numeric":"2-digit"}).format(d); return f("day")+f("month")+f("year"); };
   const dOf = b => `${b.slice(0,2)}/${b.slice(2,4)}/${b.slice(4)}`;
   const cnt = {}; PROWS.forEach(r=>{ const k=`${r.product_code}.${r.batch}`; cnt[k]=(cnt[k]||0)+1; });
@@ -811,16 +826,19 @@ async function loadPrint(){
     { const fb = isBlack(r); k += fb ? "|black" : "|clear"; title += fb ? " · ⚫ أسود لامع" : " · شفاف لامع"; }
     const g = (groups[k] ||= {k, title, sub, rows:[], last:""}); g.rows.push(i); if (k.startsWith("b:")) g.sub = `AVVA-${bk}-${PROWS[g.rows[0]].seq} … ${r.seq}`; if ((r.created_at||"")>g.last) g.last=r.created_at||"";
   });
-  const list = Object.values(groups).sort((a,b)=> (a.k==="m")-(b.k==="m") || b.last.localeCompare(a.last));
+  const list = Object.values(groups).sort((a,b)=> a.k.startsWith("m")-b.k.startsWith("m") || b.last.localeCompare(a.last));
   $("#pgroups").innerHTML = list.map((g,gi)=>{
-    const on = PSEG==="new" && gi===0;
+    const on = PSEG==="new" && !g.k.startsWith("m");
     return `<div class="pgrp${on?" open":""}" data-g="${gi}"><div class="pgh"><input type="checkbox" class="gc" data-g="${gi}" ${on?"checked":""}><span class="t">${g.title}<small>${esc(g.sub)}</small></span><span class="n">${g.rows.length}</span><button class="pgx" data-g="${gi}">عرض</button></div><div class="pgb"><table><tbody>${g.rows.map(i=>{const r=PROWS[i];return `<tr><td style="width:30px"><input type="checkbox" class="pc" data-i="${i}" data-g="${gi}" ${on?"checked":""} style="width:auto"></td><td class="mono"><b>${esc(r.seq||"")}</b> <small style="color:var(--mut)">${esc(cartonOf(r))}</small></td><td class="mono">${esc(r.code)}</td></tr>`}).join("")}</tbody></table></div></div>`;
   }).join("") || `<div style="color:var(--mut);padding:14px;text-align:center">${PSEG==="new"?"كل الملصقات مطبوعة 👍":"ما فيه ملصقات مطبوعة بعد."}</div>`;
   document.querySelectorAll(".gc").forEach(c=>{ c.onclick=e=>e.stopPropagation(); c.onchange=()=>document.querySelectorAll(`.pc[data-g="${c.dataset.g}"]`).forEach(x=>x.checked=c.checked); });
   document.querySelectorAll(".pgh").forEach(h=>h.onclick=()=>h.parentElement.classList.toggle("open"));
   document.querySelectorAll(".pgx").forEach(b=>b.onclick=e=>{e.stopPropagation(); b.closest(".pgrp").classList.toggle("open");});
   $("#markBtn").textContent = PSEG==="new" ? "نقل المحدد إلى المطبوع" : "إرجاع المحدد إلى الجديد";
+  document.querySelectorAll(".gc,.pc").forEach(c => c.addEventListener("change", pselUpdate));
+  pselUpdate();
 }
+document.querySelectorAll(".pfilm button").forEach(b => b.onclick = () => { PFILM = b.dataset.f; try { localStorage.setItem("avva_print_film", PFILM); } catch(e){} msg("#printMsg","",""); loadPrint(); });
 $("#segNew").onclick = () => { PSEG="new"; msg("#printMsg","",""); loadPrint(); };
 $("#segDone").onclick = () => { PSEG="done"; msg("#printMsg","",""); loadPrint(); };
 $("#showAll").onchange = loadPrint;
