@@ -221,7 +221,7 @@ function notFound(msg){
 function render(r){
   const parts = /^AVVA-(\d+)\.(\d+)-(\d+)$/.exec(r.carton_no || "") || [];
   const sp0 = SPECS[parts[1]] || { type: r.film || "PPF", ar: r.film || "" };
-  const sp = /أسود|اسود|black/i.test(String(r.film || "")) ? Object.assign({}, sp0, { type: "Gloss Black", ar: "أسود لامع" }) : sp0;
+  const sp = /أسود|اسود|black/i.test(String(r.film || "")) ? Object.assign({}, sp0, { type: "Gloss Black", ar: "أسود لامع", thickness: "7.5 mil" }) : sp0;
   const bd = batchDate(parts[2]), voided = r.status === "void";
   const now = new Date(), stamp = now.toLocaleDateString("en-GB") + " · " + now.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
   const status = voided ? ["bad","غير مشمول بالضمان"] : r.warranty_registered ? ["","الضمان مفعّل"] : r.sold ? ["warn","مُباع عبر المتجر الرسمي"] : ["warn","موثّق في مستودع AVVA CAR"];

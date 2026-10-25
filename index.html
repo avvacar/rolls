@@ -851,7 +851,7 @@ function qrBrand(text){ const q=qrcode(0,"H"); q.addData(text); q.make(); return
 const MICRO = n => `<div class="micro">${Array(n*3).fill("AVVA CAR ◆ GENUINE ◆").join(" ")}</div>`;
 const ROLL_SPECS = { "5201": { type:"Gloss Clear", ar:"شفاف لامع", material:"LUBRIZOL", glue:"ASHLAND", thickness:"8.5 mil", size:"1.52M × 15M" } };
 const isBlack = r => /أسود|اسود|black/i.test(String((r && r.film) || ""));
-function specOf(r){ const base = ROLL_SPECS[r && r.product_code] || { type: (r && r.film) || "PPF" }; return isBlack(r) ? Object.assign({}, base, { type:"Gloss Black", ar:"أسود لامع" }) : base; }
+function specOf(r){ const base = ROLL_SPECS[r && r.product_code] || { type: (r && r.film) || "PPF" }; return isBlack(r) ? Object.assign({}, base, { type:"Gloss Black", ar:"أسود لامع", thickness:"7.5 mil" }) : base; }
 async function labelsHtml(rows, ph){
   const bcs = {}; for (const r of rows) bcs[r.carton_no] = ph ? '<div id="phBc" style="width:84mm;height:13mm"></div>' : await barcodeSvg(r.carton_no);
   const lab = r => { const u = VURL(r.token); const sp = specOf(r);
