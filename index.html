@@ -173,7 +173,7 @@ dialog .card{margin:0}
   </div>
   <div class="card" id="mCard" style="margin-top:14px;border:1.5px solid #bfe9f8">
     <h2 style="margin:0 0 6px">✂ قص أمتار (من الرول المفتوح)</h2>
-    <div id="mOpen" class="mopen"></div>
+    <div id="mOpen" style="display:flex;flex-direction:column;gap:2px"></div>
     <div id="mCutBox">
       <label>رقم الطلب (امسح الفاتورة أو اكتبه)</label>
       <div class="row">
@@ -289,7 +289,7 @@ function parseCarton(raw){
 }
 
 let SESS=0;
-async function refreshBar(){ const s = await api("stats"); if (s.ok) { $("#sbIn").textContent = s.counts.in_stock; $("#sbOut").textContent = s.counts.assigned + s.counts.installed; const e=$("#sbOpen"); if (e) e.innerHTML = s.open ? `+ رول مفتوح: باقي <b>${(+Number(s.open.remaining).toFixed(2))}</b> م` : ""; } }
+async function refreshBar(){ const s = await api("stats"); if (s.ok) { $("#sbIn").textContent = s.counts.in_stock; $("#sbOut").textContent = s.counts.assigned + s.counts.installed; const e=$("#sbOpen"); if (e) e.innerHTML = (s.opens||[]).map(o => `+ ${esc(filmLabel(o.film))}: باقي <b>${(+Number(o.remaining).toFixed(2))}</b> م`).join(" · "); } }
 /* ---------- login ---------- */
 async function login(p){
   PASS = p; const j = await api("login");
@@ -652,13 +652,23 @@ async function printCut(c){ const h = await cutLabelHtml(c); const w = window.op
 async function pdfCut(c, btnSel){ const h = (await cutLabelHtml(c)).replace(/<script>\(document\.fonts[\s\S]*?<\/script>/,""); await htmlToPdf(h, 1, "AVVA-cut-"+(c.order_ref||"x")+"-"+String(c.meters).replace(".","_")+"m-C"+String(c.cut_id).padStart(6,"0")+".pdf", "#mLabMsg", btnSel); }
 async function cutById(id){ const j = await api("cut_info",{cut_id:id}); if (!j.ok) { msg("#mMsg", j.message, "bad"); return null; } return j; }
 
-document.head.insertAdjacentHTML("beforeend", `<style>.mopen{border-radius:14px;padding:12px 14px;background:linear-gradient(135deg,#0b0b10,#1b2330);color:#fff;margin-bottom:10px}.mopen .k{font-size:12px;color:#9fb3c8}.mopen .r{font-size:38px;font-weight:800;line-height:1.1;color:#00AEEF}.mopen .r small{font-size:16px;color:#fff;font-weight:700}.mbar{height:8px;border-radius:8px;background:#2b3646;overflow:hidden;margin-top:8px}.mbar i{display:block;height:100%;background:#00AEEF}.mchips{display:flex;gap:6px;flex-wrap:wrap}.mchips button{flex:1;min-width:44px;padding:10px 0;border-radius:10px;border:1.5px solid #d9dde3;background:#fff;font:inherit;font-weight:800;font-size:16px;cursor:pointer}.mchips button.on{background:#00AEEF;border-color:#00AEEF;color:#fff}.mcut{display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid #eee;font-size:14px}.mcut.u{opacity:.4;text-decoration:line-through}</style>`);
+document.head.insertAdjacentHTML("beforeend", `<style>.mopen.pick{cursor:pointer;opacity:.55;border:2px solid transparent}.mopen.pick.sel{opacity:1;border-color:#00AEEF}.mopen{border-radius:14px;padding:12px 14px;background:linear-gradient(135deg,#0b0b10,#1b2330);color:#fff;margin-bottom:10px}.mopen .k{font-size:12px;color:#9fb3c8}.mopen .r{font-size:38px;font-weight:800;line-height:1.1;color:#00AEEF}.mopen .r small{font-size:16px;color:#fff;font-weight:700}.mbar{height:8px;border-radius:8px;background:#2b3646;overflow:hidden;margin-top:8px}.mbar i{display:block;height:100%;background:#00AEEF}.mchips{display:flex;gap:6px;flex-wrap:wrap}.mchips button{flex:1;min-width:44px;padding:10px 0;border-radius:10px;border:1.5px solid #d9dde3;background:#fff;font:inherit;font-weight:800;font-size:16px;cursor:pointer}.mchips button.on{background:#00AEEF;border-color:#00AEEF;color:#fff}.mcut{display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid #eee;font-size:14px}.mcut.u{opacity:.4;text-decoration:line-through}</style>`);
 const fmtM = n => (+Number(n).toFixed(2)).toString();
+/* one open roll per film: black, clear and every colour code each keep their own open roll */
+const filmKey = f => { const s = String(f||"").trim(); return /^COLOR /i.test(s) ? s.split(" · ")[0].toUpperCase() : s; };
+const filmLabel = f => { const k = filmKey(f); return /^COLOR /.test(k) ? "ملون " + k.slice(6) : k; };
+let MFILM = null, OPENS = [];
+function drawOpens(){
+  const one = o => `<div class="mopen${OPENS.length > 1 ? " pick" : ""}${filmKey(o.film) === MFILM ? " sel" : ""}" data-fk="${esc(filmKey(o.film))}"><div class="k">${OPENS.length > 1 ? (filmKey(o.film) === MFILM ? "✓ بتقص من هذا · " : "اضغط للقص منه · ") : "الرول المفتوح الحين · "}<b style="color:#fff">${esc(filmLabel(o.film))}</b></div><div class="mono" style="direction:ltr;text-align:right;font-weight:700">${esc(o.carton_no)}</div><div class="r">${fmtM(o.remaining)} <small>متر باقي من ${fmtM(o.length_m)}</small></div><div class="mbar"><i style="width:${Math.max(0,Math.min(100,o.remaining/o.length_m*100))}%"></i></div></div>`;
+  $("#mOpen").innerHTML = OPENS.length ? OPENS.map(one).join("") : `<div class="mopen"><div class="r" style="font-size:20px;color:#fff">ما فيه رول مفتوح</div><div class="k">افتح رول من «📦 فتح رول جديد للأمتار» تحت.</div></div>`;
+  document.querySelectorAll("#mOpen .pick").forEach(d => d.onclick = () => { MFILM = d.dataset.fk; drawOpens(); });
+}
 async function loadMeters(){
   const j = await api("meters"); if (!j.ok) return;
-  const o = j.open;
-  $("#mOpen").innerHTML = o ? `<div class="k">الرول المفتوح الحين</div><div class="mono" style="direction:ltr;text-align:right;font-weight:700">${esc(o.carton_no)}</div><div class="r">${fmtM(o.remaining)} <small>متر باقي من ${fmtM(o.length_m)}</small></div><div class="mbar"><i style="width:${Math.max(0,Math.min(100,o.remaining/o.length_m*100))}%"></i></div>`
-    : `<div class="r" style="font-size:20px;color:#fff">ما فيه رول مفتوح</div><div class="k">افتح رول من «📦 فتح رول جديد للأمتار» تحت.</div>`;
+  OPENS = j.opens || (j.open ? [j.open] : []);
+  if (!OPENS.some(x => filmKey(x.film) === MFILM)) MFILM = OPENS.length ? filmKey(OPENS[0].film) : null;
+  const o = OPENS.length ? OPENS[0] : null;
+  drawOpens();
   $("#mCutBox").classList.toggle("hide", !o); if (!o) $("#mOpenNew").open = true;
   $("#mCuts").innerHTML = (j.cuts||[]).length ? `<div style="font-weight:700;margin-bottom:4px">آخر القصّات</div>` + j.cuts.map(c=>`<div class="mcut${c.undone?" u":""}"><b style="min-width:62px;line-height:1.2">${fmtM(c.ordered_m ?? c.meters)} م<br><small style="font-weight:400;color:var(--mut)">قُص ${fmtM(c.meters)}</small></b><span style="flex:1">${c.order_ref?"طلب "+c.order_ref:"بدون طلب"}<br><small class="mono" style="color:var(--mut)">${esc(c.carton_no)}</small></span>${c.undone?"":`<button class="btn sec mP" data-id="${c.id}" style="padding:5px 10px" title="حفظ ملصق القص PDF">🏷 PDF</button><button class="btn sec mU" data-id="${c.id}" style="padding:5px 10px">↩ تراجع</button>`}</div>`).join("") : "";
   document.querySelectorAll(".mP").forEach(b=>b.onclick=async()=>{ const c=await cutById(+b.dataset.id); if (c) { LAST_CUT=c; $("#mLab").classList.remove("hide"); pdfCut(c, "#mLabPdf"); } });
@@ -677,7 +687,7 @@ async function mOpen(force=false){
   const j = await api("open_roll",{roll:key, force});
   if (j.need_confirm) { if (confirm(j.message)) return mOpen(true); return; }
   if (!j.ok) { beep(false); msg("#mMsg", j.message, "bad"); return; }
-  beep(true); $("#mRoll").value=""; $("#mOpenNew").open=false; msg("#mMsg", `انفتح ✓ ${j.roll.carton_no} للأمتار.`, "ok"); loadMeters(); refreshBar();
+  beep(true); $("#mRoll").value=""; $("#mOpenNew").open=false; MFILM = filmKey(j.roll.film); msg("#mMsg", `انفتح ✓ ${j.roll.carton_no} (${filmLabel(j.roll.film)}) للأمتار.`, "ok"); loadMeters(); refreshBar();
 }
 $("#mOpenBtn").onclick = () => mOpen();
 let LAST_CUT = null;
@@ -688,7 +698,7 @@ $("#mCutBtn").onclick = async () => {
   const order = toLatin($("#mOrder").value).replace(/\D/g,"");
   if (!(m>0)) { msg("#mMsg","اكتب كم متر.","bad"); return; }
   if (!order && !confirm("ما كتبت رقم طلب. تسجّل القصّة بدون طلب؟")) return;
-  $("#mCutBtn").disabled = true; const j = await api("cut",{meters:m, order}); $("#mCutBtn").disabled = false;
+  $("#mCutBtn").disabled = true; const j = await api("cut",{meters:m, order, film: MFILM || ""}); $("#mCutBtn").disabled = false;
   if (!j.ok) { beep(false); msg("#mMsg", j.message, "bad"); return; }
   beep(true); $("#mOrder").value="";
   const cm = `${fmtM(j.ordered)} م (المقصوص فعلياً ${fmtM(j.meters)} م)`;
