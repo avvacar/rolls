@@ -630,17 +630,17 @@ function cutLabelBody(c, bar, e){
   const m = +Number(c.meters).toFixed(2), L = +Number(c.length_m || 15).toFixed(2), ordm = +Number(c.ordered != null ? c.ordered : c.meters).toFixed(2), extra = Math.round((m - ordm) * 100);
   const rem = c.remaining == null ? null : Math.max(0, +Number(c.remaining).toFixed(2));
   const used = rem == null ? 0 : Math.max(0, L - rem - m), pctUsed = Math.min(100, used / L * 100), pctCut = Math.min(100 - pctUsed, m / L * 100);
-  const w = cutWhen(c.at), no = "C-" + String(c.cut_id || 0).padStart(6, "0");
+  const w = cutWhen(c.at), no = "C-" + String(c.cut_id || 0).padStart(6, "0"), sp = specOf({ film: c.film || "شفاف لامع", product_code: "5201" });
   return `<div class="cl"><div class="fr"><div class="wm">${CUT_WM}</div>
   <div class="hd"><div class="lg"><div class="lb">A<b>VV</b>A CAR</div><div class="tg">SMART PPF PROTECTION</div></div><div class="tk"><b>ملصق قص أمتار</b><i>CUT TICKET</i></div></div>
   <div class="big"><div class="mm"><span class="n">${e(ordm)}</span><span class="u">متر<small>المطلوب</small></span></div>
-    <div class="dim"><span class="k">المقصوص فعلياً</span><span class="v">1.52M × ${e(m)}M</span>${extra > 0 ? `<span class="xt">+${e(extra)} سم احتياط</span>` : ""}<span class="f">Gloss Clear</span><span class="fa">شفاف لامع</span></div></div>
+    <div class="dim"><span class="k">المقصوص فعلياً</span><span class="v">1.52M × ${e(m)}M</span>${extra > 0 ? `<span class="xt">+${e(extra)} سم احتياط</span>` : ""}<span class="f">${e(sp.type)}</span><span class="fa">${e(sp.ar)}</span></div></div>
   <div class="ob">${c.order_ref ? `<div class="kv"><span class="cu">${e(c.customer_name || "—")}${c.city ? " · " + e(c.city) : ""}</span><span class="no"><i>رقم الطلب</i>${e(c.order_ref)}</span></div><div class="bc">${bar(String(c.order_ref))}</div>` : `<div class="kv"><span class="cu">بدون طلب</span><span class="no">—</span></div>`}</div>
   <div class="gr"><div><span class="k">تاريخ القص</span><span class="v">${e(w.date)}</span></div><div><span class="k">الوقت</span><span class="v">${e(w.time)}</span></div></div>
   <div class="rl"><div class="kv" style="width:100%"><span class="k">انقص من الرول</span><span class="rn">${e(c.roll || "—")}</span></div>${c.roll ? `<div class="rb">${bar(c.roll)}</div>` : ""}</div>
   ${rem == null ? "" : `<div class="rem"><div class="kv"><span>الباقي في الرول بعد القص</span><b>${e(rem)} / ${e(L)} M</b></div><div class="bar"><svg viewBox="0 0 100 6" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="ht" width="1.6" height="6" patternUnits="userSpaceOnUse" patternTransform="skewX(-35)"><rect width=".7" height="6" fill="#000"/></pattern></defs><rect x="0" y="0" width="100" height="6" fill="#fff"/><rect x="0" y="0" width="${pctUsed}" height="6" fill="#000"/><rect x="${pctUsed}" y="0" width="${pctCut}" height="6" fill="url(#ht)"/><rect x=".3" y=".3" width="99.4" height="5.4" fill="none" stroke="#000" stroke-width=".6"/></svg></div><div class="lgd"><span><i style="background:#000"></i>مقصوص قبل</span><span><svg viewBox="0 0 12 8" style="width:3mm;height:2mm;display:inline-block;vertical-align:middle"><defs><pattern id="ht2" width="2.4" height="8" patternUnits="userSpaceOnUse" patternTransform="skewX(-35)"><rect width="1" height="8" fill="#000"/></pattern></defs><rect width="12" height="8" fill="url(#ht2)"/><rect x=".5" y=".5" width="11" height="7" fill="none" stroke="#000"/></svg>هذا القص</span><span><i></i>باقي</span></div></div>`}
   <div class="sig"><span>قصّه: </span><span>راجعه: </span></div>
-  <div class="ft"><div class="micro">${Array(14).fill("AVVA CAR ◆ CUT ◆ GENUINE").join(" ◆ ")}</div><div class="fl"><span>رقم القص <b>${e(no)}</b></span><span>LUBRIZOL · ASHLAND · 8.5 mil</span></div></div>
+  <div class="ft"><div class="micro">${Array(14).fill("AVVA CAR ◆ CUT ◆ GENUINE").join(" ◆ ")}</div><div class="fl"><span>رقم القص <b>${e(no)}</b></span><span>LUBRIZOL · ASHLAND · ${e(sp.thickness || "8.5 mil")}</span></div></div>
 </div></div>`;
 }
 
@@ -891,7 +891,7 @@ const ROLL_SPECS = { "5201": { type:"Gloss Clear", ar:"شفاف لامع", mater
 const isBlack = r => /أسود|اسود|black/i.test(String((r && r.film) || ""));
 // colour rolls: film "COLOR C008 · 18M" → same layout as the clear/black labels
 const colorSpec = r => { const m = /^COLOR\s+(\S+)\s*·\s*(\d+)\s*M/i.exec(String((r && r.film) || "")); return m ? { type:"Color "+m[1], ar:"ملون · "+m[1], material:"LUBRIZOL", glue:"ASHLAND", thickness:"7.5 mil", size:`1.52M × ${m[2]}M` } : null; };
-function specOf(r){ const cs = colorSpec(r); if (cs) return cs; const base = ROLL_SPECS[r && r.product_code] || { type: (r && r.film) || "PPF" }; return isBlack(r) ? Object.assign({}, base, { type:"Gloss Black", ar:"أسود لامع", thickness:"7.5 mil" }) : base; }
+function specOf(r){ const cs = colorSpec(r); if (cs) return cs; const base = ROLL_SPECS[r && r.product_code] || { type: (r && r.film) || "PPF" }; if (isBlack(r)) return Object.assign({}, base, { type:"Gloss Black", ar:"أسود لامع", thickness:"7.5 mil" }); return /مطفي|matte/i.test(String((r && r.film) || "")) ? Object.assign({}, base, { type:"Matte Clear", ar:"شفاف مطفي", thickness:"7.5 mil" }) : base; }
 async function labelsHtml(rows, ph){
   const bcs = {}; for (const r of rows) bcs[r.carton_no] = ph ? '<div id="phBc" style="width:84mm;height:13mm"></div>' : await barcodeSvg(r.carton_no);
   const lab = r => { const u = VURL(r.token); const sp = specOf(r);
