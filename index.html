@@ -66,7 +66,7 @@ dialog .card{margin:0}
 }
 .lab{font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif;color:#000}
 .lab .top{border:0.6mm solid #000;border-radius:3mm;padding:3mm;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:space-between}
-.lab .lb{font-weight:700;letter-spacing:1.5mm;font-size:7mm;direction:ltr}.lab .lb b{color:#00b5d9}
+.lab .lb{font-weight:700;letter-spacing:1.5mm;font-size:7mm;direction:ltr}.lab .lb b{color:#000}
 .lab .seq{font-size:15mm;font-weight:700;line-height:1;direction:ltr}
 .lab .full{font-family:ui-monospace,Menlo,monospace;font-size:3.4mm;direction:ltr}
 .lab .qr svg{width:44mm;height:44mm;display:block}
@@ -506,7 +506,7 @@ async function orderLabelHtml(o){
 .lab{width:100mm;height:150mm;padding:4mm;display:flex;flex-direction:column;overflow:hidden}
 .box{position:relative;border:.7mm solid #000;border-radius:3.5mm;display:flex;flex-direction:column;align-items:center;overflow:hidden}
 .box>*{position:relative}.wm{position:absolute!important;inset:0;display:flex;align-items:center;justify-content:center;opacity:.06;pointer-events:none}.wm svg{width:70mm;height:80mm}
-.lb{font-weight:700;letter-spacing:1.5mm;font-size:6mm;direction:ltr;white-space:nowrap;line-height:1}.lb b{color:#00b5d9}
+.lb{font-weight:700;letter-spacing:1.5mm;font-size:6mm;direction:ltr;white-space:nowrap;line-height:1}.lb b{color:#000}
 .tg{font-size:2.2mm;letter-spacing:.9mm;direction:ltr;color:#333}
 .micro{width:84mm;overflow:hidden;white-space:nowrap;font-family:Consolas,monospace;font-size:1.2mm;line-height:1.5;letter-spacing:.12mm;text-align:center;direction:ltr}
 /* part 1: order + roll, cut and stick inside the roll */
@@ -539,7 +539,7 @@ async function orderLabelHtml(o){
 .qrm{position:absolute;left:50%;top:50%;width:5.4mm;height:6.3mm;transform:translate(-50%,-50%)}.qr .qrm svg{width:100%;height:100%;display:block}
 .qt{flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:.8mm;text-align:right}
 .act{font-size:3.5mm;font-weight:800}.act::before{content:"▶ ";font-size:2.5mm;vertical-align:.3mm}
-.trust{font-size:2.7mm;font-weight:700;line-height:1.35}.trust b{color:#00b5d9}.trust .nb{white-space:nowrap}
+.trust{font-size:2.7mm;font-weight:700;line-height:1.35}.trust b{color:#000}.trust .nb{white-space:nowrap}
 .cap{display:flex;flex-direction:column;gap:.2mm;font-size:2.3mm;line-height:1.35}.cap b{font-family:Consolas,monospace;font-size:2.8mm;direction:ltr;text-align:right}
 
 /* Cairo is taller than the fallback fonts: keep everything inside 150mm */
@@ -587,7 +587,7 @@ filmUI();
 .cl .wm{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.05;pointer-events:none}.cl .wm svg{width:78mm;height:90mm}
 .cl .hd{position:relative;display:flex;align-items:center;justify-content:space-between;padding:2.6mm 3.6mm 2.2mm;border-bottom:.45mm solid #000}
 .cl .lg{display:flex;flex-direction:column;align-items:flex-start;direction:ltr}
-.cl .lb{font-weight:800;letter-spacing:1.3mm;font-size:5.2mm;line-height:1;white-space:nowrap}.cl .lb b{color:#00b5d9}
+.cl .lb{font-weight:800;letter-spacing:1.3mm;font-size:5.2mm;line-height:1;white-space:nowrap}.cl .lb b{color:#000}
 .cl .tg{font-size:1.9mm;letter-spacing:.8mm;color:#333;margin-top:.6mm}
 .cl .tk{background:#000;color:#fff;border-radius:2mm;padding:1mm 2.4mm;text-align:center;line-height:1.15}
 .cl .tk b{display:block;font-size:3.4mm;font-weight:800}.cl .tk i{display:block;font-style:normal;font-size:1.9mm;letter-spacing:.6mm;direction:ltr}
@@ -912,7 +912,7 @@ ${sp.size ? `<div class="sz">${esc(sp.size)}</div>` : ""}
 .top{position:relative;border:.7mm solid #000;border-radius:3.5mm;padding:4mm 4mm 3.5mm;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:space-between}
 .top>*{position:relative}.top .wm{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.06;pointer-events:none}.top .wm svg{width:80mm;height:92mm}
 .hd{display:flex;flex-direction:column;align-items:center;gap:.6mm}
-.lb{font-weight:700;letter-spacing:1.6mm;font-size:7mm;direction:ltr;white-space:nowrap;line-height:1}.lb b{color:#00b5d9}
+.lb{font-weight:700;letter-spacing:1.6mm;font-size:7mm;direction:ltr;white-space:nowrap;line-height:1}.lb b{color:#000}
 .tg{font-size:2.3mm;letter-spacing:.9mm;direction:ltr;color:#333}
 .ty{direction:ltr;text-align:center;line-height:1}.ty b{font-size:8.6mm;font-weight:800}.tyw{display:flex;flex-direction:column;align-items:center}.tya{font-size:3.8mm;font-weight:700;margin-top:.4mm}
 .specs{display:flex;width:100%;border:.35mm solid #000;border-radius:1.6mm;direction:ltr}
@@ -928,7 +928,7 @@ ${sp.size ? `<div class="sz">${esc(sp.size)}</div>` : ""}
 .qrm{position:absolute;left:50%;top:50%;width:6.4mm;height:7.4mm;transform:translate(-50%,-50%)}.qr .qrm svg{width:100%;height:100%;display:block}
 .qt{flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:1mm;text-align:right}
 .act{font-size:3.8mm;font-weight:800}.act::before{content:"▶ ";font-size:2.6mm;vertical-align:.3mm}
-.trust{font-size:2.9mm;font-weight:700;line-height:1.35}.trust b{color:#00b5d9}.trust .nb{white-space:nowrap}
+.trust{font-size:2.9mm;font-weight:700;line-height:1.35}.trust b{color:#000}.trust .nb{white-space:nowrap}
 .cap{display:flex;flex-direction:column;gap:.2mm;font-size:2.5mm;line-height:1.35}.cap b{font-family:Consolas,monospace;font-size:3mm;direction:ltr;text-align:right}
 </style></head><body><div class="hint">اطبع بحجم 100×150 مم وبدون هوامش (Margins: None) وبمقياس 100%.</div>${rows.map(lab).join("")}<script>setTimeout(()=>print(),400)<\/script></body></html>`;
 }
