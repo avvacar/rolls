@@ -1,0 +1,658 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>مستودع بوست شاين</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0d0f14">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0d0f14;--ink2:#1b1f29;--gold:#f5b301;--gold-l:#ffd75e;--gold-d:#a87400;--bg:#f4f3ef;--card:#fff;--line:#e6e3da;--mut:#5d6170;--ok:#0a8f5b;--warn:#a86200;--bad:#c62828}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif;font-size:16px;-webkit-tap-highlight-color:transparent}
+.num,.mono{font-family:"Barlow Condensed","IBM Plex Sans Arabic",sans-serif;direction:ltr;unicode-bidi:embed;letter-spacing:.5px}
+header{background:var(--ink);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:6}
+.brand{direction:ltr;font-family:"Barlow Condensed",sans-serif;font-weight:800;font-size:24px;letter-spacing:3px;line-height:1;display:flex;align-items:center;gap:6px}
+.brand b{background:linear-gradient(100deg,var(--gold-d),var(--gold) 35%,var(--gold-l) 50%,var(--gold) 65%,var(--gold-d));-webkit-background-clip:text;background-clip:text;color:transparent;background-size:220% 100%;animation:shine 5s ease-in-out infinite}
+.brand i{font-style:normal;color:var(--gold);font-size:16px}
+@keyframes shine{0%,100%{background-position:100% 0}50%{background-position:0 0}}
+header .sub{color:#a3a7b5;font-size:13px;flex:1}
+header button{background:none;border:1px solid #2e3342;color:#a3a7b5;border-radius:8px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer}
+nav{display:flex;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:48px;z-index:5;overflow-x:auto}
+nav button{flex:1;min-width:84px;padding:12px 6px;border:0;background:none;font:inherit;font-weight:600;color:var(--mut);border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}
+nav button.on{color:var(--ink);border-color:var(--gold)}
+main{max-width:760px;margin:0 auto;padding:16px}
+.card{background:var(--card);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 0 0 1px rgba(0,0,0,.02)}
+h2{margin:0 0 10px;font-size:18px}
+label{display:block;font-size:14px;color:var(--mut);margin:10px 0 4px}
+input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;font:inherit;background:#fff;color:var(--ink)}
+input:focus{outline:2px solid var(--gold);border-color:var(--gold)}
+input.gun{font-size:20px;text-align:center;direction:ltr;font-family:"Barlow Condensed",sans-serif;letter-spacing:1px;border:2px dashed #d8d2c0;background:#fffdf6}
+input.gun:focus{border-style:solid}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 16px;border-radius:12px;border:0;font:inherit;font-weight:700;background:var(--ink);color:var(--gold);cursor:pointer}
+.btn.sec{background:#f6efd9;color:var(--ink)}.btn.w{width:100%}.btn:disabled{opacity:.45;cursor:default}
+.btn.red{background:#fdecec;color:var(--bad)}.btn.ok{background:var(--ok);color:#fff}
+.btn.sm{padding:7px 12px;font-size:14px;border-radius:10px}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}
+.msg{padding:12px;border-radius:12px;margin-top:10px;font-weight:600;display:none}
+.msg.ok{background:#e6f6ef;color:var(--ok)}.msg.warn{background:#fff4e0;color:var(--warn)}.msg.bad{background:#fdecec;color:var(--bad)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.stat{background:var(--card);border-radius:14px;padding:10px 6px;text-align:center}
+.stat b{display:block;font-size:26px;font-family:"Barlow Condensed",sans-serif;line-height:1.1}.stat span{font-size:12px;color:var(--mut)}
+.stat.main{background:var(--ink);color:#fff}.stat.main b{color:var(--gold)}.stat.main span{color:#a3a7b5}
+.bar{height:6px;background:#ece8dc;border-radius:9px;overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold-d),var(--gold))}
+.hide{display:none!important}
+.item{border:1px solid var(--line);border-radius:14px;padding:14px;background:linear-gradient(180deg,#fffdf7,#fff)}
+.item .nm{font-weight:700;font-size:18px;line-height:1.45}
+.item .op{color:var(--mut);font-size:14px;margin-top:2px}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tag{font-size:12px;background:#f1efe8;border-radius:99px;padding:2px 9px;color:#3a3d48}
+.tag.g{background:#fff1c4;color:#6b4b00}.tag.r{background:#fdecec;color:var(--bad)}.tag.k{background:var(--ink);color:var(--gold)}
+.qtyrow{display:flex;align-items:center;gap:10px;margin-top:14px}
+.qtyrow button{width:56px;height:56px;border-radius:14px;border:0;background:#f6efd9;font-size:28px;font-weight:700;cursor:pointer;color:var(--ink)}
+.qtyrow input{font-size:38px;text-align:center;font-family:"Barlow Condensed",sans-serif;font-weight:700;padding:6px;height:56px}
+.sys{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding:10px 12px;background:#f7f6f2;border-radius:12px;font-size:14px}
+.sys b{font-family:"Barlow Condensed",sans-serif;font-size:22px}
+.list .li{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+.list .li:last-child{border-bottom:0}
+.li .t{flex:1;min-width:0}.li .t b{display:block;font-weight:600;font-size:15px;line-height:1.4;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.li .t small{color:var(--mut);font-size:12px}
+.li .q{font-family:"Barlow Condensed",sans-serif;font-size:24px;font-weight:700;min-width:48px;text-align:center}
+.li .q.z{color:var(--bad)}.li .q.u{font-size:13px;font-family:inherit;color:var(--mut);font-weight:600}
+.li.undone{opacity:.45}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-top:10px}
+.chips button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:6px 12px;font:inherit;font-size:13px;white-space:nowrap;cursor:pointer;color:var(--mut)}
+.chips button.on{background:var(--ink);color:var(--gold);border-color:var(--ink)}
+.cam{position:relative;background:#000;border-radius:14px;overflow:hidden;aspect-ratio:4/3;width:100%;display:none;margin-top:10px}
+.cam video{width:100%;height:100%;object-fit:cover}
+.cam .guide{position:absolute;left:8%;right:8%;top:35%;height:30%;border:3px solid var(--gold);border-radius:12px;box-shadow:0 0 0 999px rgba(0,0,0,.4)}
+.orderhead{display:flex;align-items:center;gap:10px;background:var(--ink);color:#fff;border-radius:14px;padding:12px 14px}
+.orderhead b{color:var(--gold);font-family:"Barlow Condensed",sans-serif;font-size:26px;letter-spacing:1px}
+.orderhead span{flex:1;color:#a3a7b5;font-size:13px}
+dialog{border:0;border-radius:18px;padding:0;width:min(560px,94vw);max-height:90vh}dialog::backdrop{background:rgba(13,15,20,.55)}
+dialog .card{margin:0;box-shadow:none}
+.log div{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.log .d{font-family:"Barlow Condensed",sans-serif;font-size:17px;font-weight:700;direction:ltr}
+.log .d.p{color:var(--ok)}.log .d.m{color:var(--bad)}
+pre.prompt{white-space:pre-wrap;background:#0d0f14;color:#f2efe6;border-radius:12px;padding:14px;font-family:"IBM Plex Sans Arabic",sans-serif;font-size:13.5px;line-height:1.8;margin:8px 0 0;max-height:320px;overflow:auto}
+#login{max-width:400px;margin:70px auto}
+.loginlogo{text-align:center;margin-bottom:18px}
+.loginlogo .brand{justify-content:center;font-size:40px;color:var(--ink)}
+.loginlogo small{display:block;color:var(--mut);margin-top:6px}
+table.lb{width:100%;border-collapse:collapse;font-size:14px}
+table.lb td{padding:8px 4px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.lb input[type=number]{width:62px;padding:6px;text-align:center}
+table.lb input[type=checkbox]{width:20px;height:20px;accent-color:var(--ink)}
+@media (max-width:520px){.stats{grid-template-columns:repeat(2,1fr)} main{padding:12px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">POST<b>SHINE</b><i>✦</i></div>
+  <div class="sub">المستودع</div>
+  <button id="logout" class="hide">خروج</button>
+</header>
+
+<section id="login" class="card">
+  <div class="loginlogo"><div class="brand">POST<b>SHINE</b><i>✦</i></div><small>مستودع بوست شاين — دخول الموظفين</small></div>
+  <label for="pw">كلمة المرور</label>
+  <input id="pw" type="password" autocomplete="current-password">
+  <div style="height:12px"></div>
+  <button class="btn w" id="loginBtn">دخول</button>
+  <div class="msg" id="loginMsg"></div>
+</section>
+
+<div id="app" class="hide">
+<nav>
+  <button data-t="count" class="on">الجرد</button>
+  <button data-t="order">تجهيز طلب</button>
+  <button data-t="items">المنتجات</button>
+  <button data-t="labels">الملصقات</button>
+  <button data-t="sync">مزامنة سلة</button>
+</nav>
+<main>
+  <div class="stats">
+    <div class="stat main"><b id="sUnits">—</b><span>حبة في المستودع</span></div>
+    <div class="stat"><b id="sTracked">—</b><span>منتج بكمية</span></div>
+    <div class="stat"><b id="sCounted">—</b><span>تم جردها</span><div class="bar"><i id="sBar" style="width:0"></i></div></div>
+    <div class="stat"><b id="sZero">—</b><span>كميتها صفر</span></div>
+  </div>
+
+  <!-- ============ الجرد ============ -->
+  <section id="t-count">
+    <div class="card">
+      <h2>جرد بالسكان</h2>
+      <input class="gun" id="cGun" placeholder="امسح الباركود هنا" autocomplete="off" inputmode="none">
+      <div class="row" style="margin-top:8px"><button class="btn sec sm" id="cCam">📷 الكاميرا</button><button class="btn sec sm" id="cType">⌨️ أكتب الرقم</button></div>
+      <div class="cam" id="camC"><video playsinline muted></video><div class="guide"></div></div>
+      <div class="msg" id="cMsg"></div>
+    </div>
+    <div class="card hide" id="cBox">
+      <div class="item" id="cItem"></div>
+      <div class="sys"><span>الكمية في النظام</span><b id="cSys">0</b></div>
+      <label>الكمية الموجودة فعلياً على الرف</label>
+      <div class="qtyrow"><button id="cMinus">−</button><input id="cQty" type="text" inputmode="numeric" autocomplete="off"><button id="cPlus">+</button></div>
+      <p style="font-size:13px;color:var(--mut);margin:8px 0 0">كل مسحة لنفس المنتج تزيد العدد 1 — أو اكتب العدد مباشرة.</p>
+      <div class="row" style="margin-top:12px"><button class="btn" id="cSave">حفظ الجرد ✓</button><button class="btn sec" id="cCancel" style="flex:.45">إلغاء</button></div>
+    </div>
+    <div class="card hide" id="cLink">
+      <h2>باركود غير مسجّل</h2>
+      <p style="margin:0 0 6px;color:var(--mut);font-size:14px">الجهاز قرأ: <b class="mono" id="cLinkCode"></b><br>ابحث عن المنتج واربط الباركود فيه — بعدها أي مسحة له تتعرف عليه.</p>
+      <input id="cLinkQ" placeholder="اكتب اسم المنتج">
+      <div class="list" id="cLinkList"></div>
+      <button class="btn sec w sm" id="cLinkCancel" style="margin-top:8px">إلغاء</button>
+    </div>
+    <div class="card">
+      <h2 style="font-size:16px">آخر الجرد في هذي الجلسة</h2>
+      <div class="list" id="cDone"><p style="color:var(--mut);font-size:14px;margin:0">لسا ما جردت شي.</p></div>
+    </div>
+  </section>
+
+  <!-- ============ تجهيز طلب ============ -->
+  <section id="t-order" class="hide">
+    <div class="card" id="oStart">
+      <h2>تجهيز طلب</h2>
+      <label>رقم الطلب</label>
+      <input class="gun" id="oRef" placeholder="امسح أو اكتب رقم الطلب" autocomplete="off" inputmode="numeric">
+      <button class="btn w" id="oGo" style="margin-top:10px">ابدأ التجهيز</button>
+    </div>
+    <div class="hide" id="oWork">
+      <div class="orderhead" style="margin-bottom:14px"><span>الطلب</span><b id="oRefShow"></b><button class="btn sec sm" id="oEnd">إنهاء ✓</button></div>
+      <div class="card">
+        <input class="gun" id="oGun" placeholder="امسح كل حبة تطلع من الرف" autocomplete="off" inputmode="none">
+        <div class="row" style="margin-top:8px"><button class="btn sec sm" id="oCam">📷 الكاميرا</button><button class="btn sec sm" id="oFind">🔎 منتج بدون باركود</button></div>
+        <div class="cam" id="camO"><video playsinline muted></video><div class="guide"></div></div>
+        <div class="msg" id="oMsg"></div>
+        <div class="hide" id="oSearch" style="margin-top:10px"><input id="oQ" placeholder="اكتب اسم المنتج"><div class="list" id="oQList"></div></div>
+      </div>
+      <div class="card">
+        <h2 style="font-size:16px">اللي انخصم لهذا الطلب <span class="tag k" id="oCount">0</span></h2>
+        <div class="list" id="oList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ المنتجات ============ -->
+  <section id="t-items" class="hide">
+    <div class="card">
+      <input id="iQ" placeholder="🔎 ابحث بالاسم أو SKU أو الكود">
+      <div class="chips" id="iChips">
+        <button data-f="tracked" class="on">بكمية</button>
+        <button data-f="uncounted">ما انجردت</button>
+        <button data-f="counted">انجردت</button>
+        <button data-f="zero">صفر</button>
+        <button data-f="nobarcode">بدون باركود</button>
+        <button data-f="unlimited">غير محدود</button>
+        <button data-f="">الكل</button>
+      </div>
+    </div>
+    <div class="card"><div style="font-size:13px;color:var(--mut);margin-bottom:4px" id="iTotal"></div><div class="list" id="iList"></div><button class="btn sec w sm hide" id="iMore" style="margin-top:8px">عرض المزيد</button></div>
+  </section>
+
+  <!-- ============ الملصقات ============ -->
+  <section id="t-labels" class="hide">
+    <div class="card">
+      <h2>ملصقات المنتجات اللي بدون باركود</h2>
+      <p style="margin:0;color:var(--mut);font-size:14px">ملصق 10×15 لطابعة البوليصات. اختر المنتجات وعدد النسخ، وينزل ملف PDF.</p>
+      <div class="chips" id="lChips"><button data-p="0" class="on">ما انطبعت</button><button data-p="1">انطبعت</button></div>
+      <div class="row" style="margin-top:10px"><button class="btn sec sm" id="lAll">تحديد الكل</button><button class="btn sec sm" id="lNone">إلغاء التحديد</button></div>
+      <div style="max-height:52vh;overflow:auto;margin-top:8px"><table class="lb" id="lTable"></table></div>
+      <button class="btn w" id="lPrint" style="margin-top:12px">🖨 نزّل ملف PDF</button>
+      <div class="msg" id="lMsg"></div>
+    </div>
+  </section>
+
+  <!-- ============ المزامنة ============ -->
+  <section id="t-sync" class="hide">
+    <div class="card">
+      <h2>مزامنة الكميات مع سلة</h2>
+      <div class="sys" style="margin-top:0"><span>منتجات تغيّرت كميتها من آخر مزامنة</span><b id="ySum">—</b></div>
+      <p style="font-size:14px;color:var(--mut);line-height:1.8">١) نزّل ملف المزامنة.<br>٢) افتح Claude بحساب بوست شاين، أرفق الملف، وانسخ له الطلب اللي تحت.<br>٣) لما يخلص ويأكد لك، ارجع هنا واضغط «تمت المزامنة».</p>
+      <button class="btn w" id="yFile">⬇️ نزّل ملف المزامنة (Excel)</button>
+      <label style="margin-top:14px">الطلب اللي تنسخه لـ Claude بوست شاين</label>
+      <pre class="prompt" id="yPrompt"></pre>
+      <button class="btn sec w sm" id="yCopy" style="margin-top:8px">📋 نسخ الطلب</button>
+      <div style="height:10px"></div>
+      <button class="btn ok w" id="yDone">✓ تمت المزامنة في سلة</button>
+      <div class="msg" id="yMsg"></div>
+    </div>
+  </section>
+</main>
+</div>
+
+<dialog id="dlg"><div class="card" id="dlgBody"></div></dialog>
+
+<script>
+const API = "https://uctvlqcwltpiqabyvchb.supabase.co/functions/v1/postshine";
+const $ = s => document.querySelector(s);
+const store = { get(k){try{return localStorage.getItem(k)}catch(e){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}}, del(k){try{localStorage.removeItem(k)}catch(e){}} };
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const toLatin = s => String(s ?? "").replace(/[٠-٩]/g, d => d.charCodeAt(0)-0x660).replace(/[۰-۹]/g, d => d.charCodeAt(0)-0x6f0);
+let PASS = "", ROLE = "", TAB = "count";
+function msg(el, text, kind){ const m = typeof el==="string" ? $(el) : el; m.className = "msg "+kind; m.innerHTML = text; m.style.display = text ? "block" : "none"; }
+async function api(action, body={}){
+  try {
+    const r = await fetch(API, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({action, password: PASS, ...body})});
+    const j = await r.json();
+    if (j.code==="unauthorized" && action!=="login") logout();
+    return j;
+  } catch(e){ return {ok:false, message:"تعذر الاتصال بالخادم — تأكد من الإنترنت."}; }
+}
+function loadScript(src){ return new Promise((res,rej)=>{ if (document.querySelector('script[src="'+src+'"]')) return res(); const s=document.createElement("script"); s.src=src; s.onload=res; s.onerror=()=>rej(new Error("تعذر تحميل المكتبة، تأكد من الإنترنت.")); document.head.appendChild(s); }); }
+const fmtDate = t => { if(!t) return ""; const d=new Date(new Date(t).getTime()+(180+new Date().getTimezoneOffset())*60000); const p=n=>String(n).padStart(2,"0"); let h=d.getHours(); const ap=h<12?"ص":"م"; h=h%12||12; return `\u2066${p(d.getDate())}/${p(d.getMonth()+1)} ${h}:${p(d.getMinutes())}\u2069 ${ap}`; };
+const optTxt = it => it.option ? `<div class="op">${esc(it.option)}</div>` : "";
+const factory = it => [it.sku, ...String(it.gtin||"").split(/[\/,|]/)].map(x=>String(x||"").trim()).filter(x=>/^\d{8,14}$/.test(x));
+
+/* ---------- sound ---------- */
+let AC=null;
+function unlockAudio(){ try{ if(!AC) AC=new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==="suspended") AC.resume(); }catch(e){} }
+document.addEventListener("pointerdown", unlockAudio, {passive:true}); document.addEventListener("keydown", unlockAudio);
+function tone(f,st,dur,vol,type){ const o=AC.createOscillator(), g=AC.createGain(); o.type=type||"triangle"; o.frequency.value=f; o.connect(g); g.connect(AC.destination); const t0=AC.currentTime+st; g.gain.setValueAtTime(.0001,t0); g.gain.exponentialRampToValueAtTime(vol,t0+.01); g.gain.exponentialRampToValueAtTime(.0001,t0+dur); o.start(t0); o.stop(t0+dur+.05); }
+function beep(ok){ try{ unlockAudio(); if(AC){ if(ok){ tone(1760,0,.25,.6,"square"); tone(2637,.09,.35,.5); } else { tone(220,0,.3,.7,"square"); tone(170,.3,.4,.7,"square"); } } }catch(e){} if(navigator.vibrate) navigator.vibrate(ok?90:[200,100,200]); }
+
+/* ---------- login ---------- */
+async function login(p){
+  PASS = p; const j = await api("login");
+  if (!j.ok){ PASS=""; msg("#loginMsg", esc(j.message||"كلمة المرور غير صحيحة."), "bad"); return; }
+  ROLE = j.role; store.set("ps_pw", p);
+  $("#login").classList.add("hide"); $("#app").classList.remove("hide"); $("#logout").classList.remove("hide");
+  refreshStats(); tab("count");
+}
+function logout(){ PASS=""; store.del("ps_pw"); location.reload(); }
+$("#loginBtn").onclick = () => login($("#pw").value.trim());
+$("#pw").onkeydown = e => { if (e.key==="Enter") $("#loginBtn").click(); };
+$("#logout").onclick = logout;
+{ const p = store.get("ps_pw"); if (p) login(p); }
+
+let STATS = null;
+async function refreshStats(){
+  const s = await api("stats"); if (!s.ok) return; STATS = s;
+  $("#sUnits").textContent = s.units.toLocaleString("en"); $("#sTracked").textContent = s.tracked;
+  $("#sCounted").textContent = s.counted+"/"+s.tracked; $("#sBar").style.width = (s.tracked? (100*s.counted/s.tracked):0)+"%";
+  $("#sZero").textContent = s.zero; $("#ySum").textContent = s.diff;
+}
+
+/* ---------- tabs ---------- */
+function tab(t){
+  TAB = t;
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.t===t));
+  ["count","order","items","labels","sync"].forEach(x => $("#t-"+x).classList.toggle("hide", x!==t));
+  stopCams();
+  if (t==="count") focusGun("#cGun");
+  if (t==="order") focusGun(ORDER ? "#oGun" : "#oRef");
+  if (t==="items") loadItems(true);
+  if (t==="labels") loadLabels();
+  if (t==="sync") { refreshStats(); $("#yPrompt").textContent = SYNC_PROMPT; }
+}
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => tab(b.dataset.t));
+function focusGun(sel){ setTimeout(()=>{ const g=$(sel); if (g && !g.closest(".hide")) g.focus({preventScroll:true}); }, 60); }
+
+/* ---------- scanner gun (works even if the keyboard is Arabic) ---------- */
+const KMAP = {Minus:["-","_"],Equal:["=","+"],Period:[".",">"],Comma:[",","<"],Slash:["/","?"],Semicolon:[";",":"],Quote:["'",'"'],BracketLeft:["[","{"],BracketRight:["]","}"],Backslash:["\\","|"],Space:[" "," "],NumpadSubtract:["-","-"],NumpadDecimal:[".","."]};
+const DSH = ")!@#$%^&*(";
+function gunInput(el, onScan){
+  let buf = "";
+  el.addEventListener("keydown", e => {
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
+    if (e.key==="Enter" || e.code==="Enter" || e.code==="NumpadEnter" || e.key==="Tab"){ e.preventDefault(); const v=buf.trim(); buf=""; el.value=""; if (v) onScan(v); return; }
+    if (e.code==="Backspace"){ e.preventDefault(); buf=buf.slice(0,-1); el.value=buf; return; }
+    let ch=null; const c=e.code||"";
+    const asc = e.key && e.key.length===1 && e.key.charCodeAt(0)>=32 && e.key.charCodeAt(0)<127;
+    if (/^Key[A-Z]$/.test(c)){ let up=e.shiftKey; if (asc && /[a-z]/i.test(e.key)){ up = e.key===e.key.toUpperCase(); if (e.getModifierState && e.getModifierState("CapsLock")) up=!up; } ch = up ? c[3] : c[3].toLowerCase(); }
+    else if (/^Digit\d$/.test(c)) ch = e.shiftKey ? DSH[+c[5]] : c[5];
+    else if (/^Numpad\d$/.test(c)) ch = c[6];
+    else if (KMAP[c]) ch = KMAP[c][e.shiftKey?1:0];
+    else if (asc) ch = e.key;
+    else if (e.key && e.key.length===1) ch = toLatin(e.key);
+    if (ch!==null){ e.preventDefault(); buf+=ch; el.value=buf; }
+  });
+  el.addEventListener("input", () => { buf = el.value; });
+  el.addEventListener("paste", e => { const t=(e.clipboardData||window.clipboardData).getData("text"); if (t){ e.preventDefault(); el.value=""; buf=""; onScan(t.trim()); } });
+}
+
+/* ---------- camera ---------- */
+const streams = {}; let zx = null;
+async function detector(){
+  if ("BarcodeDetector" in window){ try { const d=new BarcodeDetector({formats:["ean_13","ean_8","upc_a","upc_e","code_128","code_39","qr_code","itf"]}); return { detect: async v => (await d.detect(v)).map(x=>x.rawValue) }; } catch(e){} }
+  if (!zx){ await loadScript("https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"); zx = new ZXing.BrowserMultiFormatReader(); }
+  const c=document.createElement("canvas");
+  return { detect: async v => { c.width=v.videoWidth; c.height=v.videoHeight; c.getContext("2d").drawImage(v,0,0); try { const r=zx.decodeFromCanvas(c); return r?[r.getText()]:[]; } catch(e){ return []; } } };
+}
+async function camToggle(boxSel, btn, onCode){
+  const box=$(boxSel);
+  if (streams[box.id]){ closeCam(box); btn.textContent="📷 الكاميرا"; return; }
+  let s; try { s = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1280}},audio:false}); } catch(e){ alert("ما قدرت أفتح الكاميرا. اسمح للمتصفح يستخدمها."); return; }
+  const v=box.querySelector("video"); v.srcObject=s; await v.play(); box.style.display="block"; streams[box.id]=s; box._stop=false; btn.textContent="✕ سكّر الكاميرا";
+  const det = await detector(); let last="", lastAt=0;
+  const loop = async () => {
+    if (box._stop) return;
+    if (v.readyState>=2 && !box._busy){
+      const codes = await det.detect(v).catch(()=>[]);
+      if (codes.length){ const c=codes[0]; if (c!==last || Date.now()-lastAt>2500){ last=c; lastAt=Date.now(); box._busy=true; try { await onCode(c); } finally { box._busy=false; } } }
+    }
+    setTimeout(loop, 220);
+  };
+  loop();
+}
+function closeCam(box){ const s=streams[box.id]; if (s) s.getTracks().forEach(t=>t.stop()); delete streams[box.id]; box.style.display="none"; box._stop=true; }
+function stopCams(){ document.querySelectorAll(".cam").forEach(closeCam); $("#cCam").textContent="📷 الكاميرا"; $("#oCam").textContent="📷 الكاميرا"; }
+
+/* ---------- item card + picker ---------- */
+function itemCard(it){
+  const f = factory(it);
+  return `<div class="nm">${esc(it.name)}</div>${optTxt(it)}<div class="tags"><span class="tag k mono">${esc(it.code)}</span>${it.sku&&!/^\d{8,14}$/.test(it.sku)?`<span class="tag mono">SKU ${esc(it.sku)}</span>`:""}${f.map(x=>`<span class="tag g mono">${esc(x)}</span>`).join("")}${it.unlimited?`<span class="tag">غير محدود</span>`:""}${it.counted_at?`<span class="tag">آخر جرد ${esc(fmtDate(it.counted_at))}</span>`:""}</div>`;
+}
+function pick(items){
+  return new Promise(res => {
+    $("#dlgBody").innerHTML = `<h2>نفس الباركود على أكثر من خيار — اختر</h2><div class="list">${items.map((it,i)=>`<div class="li" data-i="${i}"><div class="t"><b>${esc(it.name)}</b><small>${esc(it.option||"")} · ${esc(it.code)}</small></div><div class="q">${it.unlimited?"∞":it.qty}</div></div>`).join("")}</div><button class="btn sec w sm" id="pkX" style="margin-top:10px">إلغاء</button>`;
+    $("#dlg").showModal();
+    $("#dlgBody").querySelectorAll(".li").forEach(el => el.onclick = () => { $("#dlg").close(); res(items[+el.dataset.i]); });
+    $("#pkX").onclick = () => { $("#dlg").close(); res(null); };
+  });
+}
+async function lookup(raw){
+  const j = await api("find",{key: raw});
+  if (!j.ok) return {miss:true, message:j.message, code:j.code};
+  if (j.items.length===1) return {item:j.items[0]};
+  const it = await pick(j.items); return it ? {item:it} : {cancel:true};
+}
+function searchBox(inputSel, listSel, onPick, filter){
+  let t=null;
+  $(inputSel).oninput = () => { clearTimeout(t); t=setTimeout(async()=>{
+    const q=$(inputSel).value.trim(); if (q.length<2){ $(listSel).innerHTML=""; return; }
+    const j=await api("list",{q, filter: filter||"", limit:20}); if(!j.ok) return;
+    $(listSel).innerHTML = j.items.map((it,i)=>`<div class="li" data-i="${i}"><div class="t"><b>${esc(it.name)}</b><small>${esc(it.option||"")} · ${esc(it.code)}</small></div><div class="q ${it.unlimited?"u":""}">${it.unlimited?"غير محدود":it.qty}</div></div>`).join("") || `<p style="color:var(--mut);font-size:14px">ما فيه نتائج.</p>`;
+    $(listSel).querySelectorAll(".li").forEach(el => el.onclick = () => onPick(j.items[+el.dataset.i]));
+  },250); };
+}
+
+/* ================= الجرد ================= */
+let CUR = null, CN = 0, CDONE = [];
+async function countScan(raw){
+  raw = String(raw).trim(); if (!raw) return;
+  if (CUR){
+    const r = await api("find",{key:raw});
+    if (r.ok && r.items.some(x=>x.id===CUR.id)){ CN++; $("#cQty").value=CN; beep(true); bump(); return; }
+    beep(false); msg("#cMsg","احفظ جرد المنتج الحالي أو ألغيه قبل ما تمسح منتج ثاني.","warn"); return;
+  }
+  msg("#cMsg","","");
+  const r = await lookup(raw);
+  if (r.cancel) return;
+  if (r.miss){ beep(false); showLink(raw); return; }
+  const it = r.item;
+  if (it.unlimited){ beep(false); msg("#cMsg",`<b>${esc(it.name)}</b><br>هذا المنتج كميته «غير محدود» في سلة — ما يدخل في الجرد.`,"warn"); return; }
+  beep(true); openCount(it, 1);
+}
+function openCount(it, n){
+  CUR = it; CN = n;
+  $("#cItem").innerHTML = itemCard(it); $("#cSys").textContent = it.qty; $("#cQty").value = n;
+  $("#cBox").classList.remove("hide"); $("#cLink").classList.add("hide");
+  focusGun("#cGun");
+}
+function bump(){ const q=$("#cQty"); q.style.transform="scale(1.08)"; setTimeout(()=>q.style.transform="",120); }
+function closeCount(){ CUR=null; CN=0; $("#cBox").classList.add("hide"); focusGun("#cGun"); }
+$("#cMinus").onclick = () => { CN=Math.max(0,(+toLatin($("#cQty").value)||0)-1); $("#cQty").value=CN; };
+$("#cPlus").onclick = () => { CN=(+toLatin($("#cQty").value)||0)+1; $("#cQty").value=CN; };
+$("#cQty").oninput = () => { CN = +toLatin($("#cQty").value)||0; };
+$("#cQty").onkeydown = e => { if (e.key==="Enter"){ e.preventDefault(); $("#cSave").click(); } };
+$("#cCancel").onclick = () => { closeCount(); msg("#cMsg","",""); };
+$("#cSave").onclick = async () => {
+  if (!CUR) return;
+  const v = toLatin($("#cQty").value).trim();
+  if (!/^\d+$/.test(v)){ msg("#cMsg","اكتب الكمية رقم صحيح.","bad"); return; }
+  $("#cSave").disabled = true;
+  const j = await api("count",{id:CUR.id, qty:+v});
+  $("#cSave").disabled = false;
+  if (!j.ok){ beep(false); msg("#cMsg",esc(j.message),"bad"); return; }
+  const d = j.qty - j.qty_before;
+  CDONE.unshift({log:j.log_id, it:j.item, before:j.qty_before, qty:j.qty});
+  msg("#cMsg",`✓ ${esc(j.item.name)} — صار <b class="num">${j.qty}</b> ${d===0?"(مطابق للنظام)":`(كان ${j.qty_before}، الفرق <span class="num">${d>0?"+":""}${d}</span>)`}`, d===0?"ok":"warn");
+  renderDone(); closeCount(); refreshStats();
+};
+function renderDone(){
+  $("#cDone").innerHTML = CDONE.map((x,i)=>`<div class="li ${x.undone?"undone":""}" style="cursor:default"><div class="t"><b>${esc(x.it.name)}</b><small>${esc(x.it.option||"")} · كان ${x.before} ← صار ${x.qty}</small></div><div class="q">${x.qty}</div>${x.undone?"":`<button class="btn sec sm" data-i="${i}">↩</button>`}</div>`).join("") || `<p style="color:var(--mut);font-size:14px;margin:0">لسا ما جردت شي.</p>`;
+  $("#cDone").querySelectorAll("button").forEach(b => b.onclick = async () => { const x=CDONE[+b.dataset.i]; const j=await api("undo",{log_id:x.log}); if(!j.ok){ msg("#cMsg",esc(j.message),"bad"); return; } x.undone=true; renderDone(); refreshStats(); msg("#cMsg","رجّعت الكمية زي ما كانت.","ok"); });
+}
+gunInput($("#cGun"), v => countScan(v));
+$("#cCam").onclick = () => camToggle("#camC", $("#cCam"), countScan);
+$("#cType").onclick = () => { const v = prompt("اكتب رقم الباركود أو الكود (مثل PS00012)"); if (v) countScan(toLatin(v)); };
+document.addEventListener("click", e => { if (TAB==="count" && !e.target.closest("input,button,select,dialog,.li,textarea")) focusGun("#cGun"); if (TAB==="order" && ORDER && !e.target.closest("input,button,select,dialog,.li")) focusGun("#oGun"); });
+
+/* link unknown barcode to a product */
+let LINKCODE = "";
+function showLink(code){
+  LINKCODE = code; $("#cLinkCode").textContent = code; $("#cLinkQ").value=""; $("#cLinkList").innerHTML="";
+  $("#cLink").classList.remove("hide"); $("#cBox").classList.add("hide"); msg("#cMsg","","");
+  setTimeout(()=>$("#cLinkQ").focus(),60);
+}
+searchBox("#cLinkQ","#cLinkList", async it => {
+  if (!confirm(`أربط الباركود ${LINKCODE} بـ:\n${it.name}${it.option?" — "+it.option:""} ؟`)) return;
+  const j = await api("add_key",{id:it.id, key:LINKCODE});
+  if (!j.ok){ beep(false); msg("#cMsg",esc(j.message),"bad"); return; }
+  beep(true); $("#cLink").classList.add("hide"); msg("#cMsg",`✓ ربطت الباركود بـ ${esc(it.name)}`,"ok");
+  if (!j.item.unlimited) openCount(j.item, 1);
+});
+$("#cLinkCancel").onclick = () => { $("#cLink").classList.add("hide"); focusGun("#cGun"); };
+
+/* ================= تجهيز طلب ================= */
+let ORDER = "", OLOG = [];
+gunInput($("#oRef"), v => { $("#oRef").value = toLatin(v).replace(/\D/g,""); $("#oGo").click(); });
+$("#oRef").addEventListener("input", () => {});
+$("#oGo").onclick = async () => {
+  const ref = toLatin($("#oRef").value).replace(/\D/g,"");
+  if (ref.length<4){ alert("اكتب رقم الطلب صحيح."); return; }
+  ORDER = ref; $("#oRefShow").textContent = "#"+ref;
+  $("#oStart").classList.add("hide"); $("#oWork").classList.remove("hide"); msg("#oMsg","","");
+  await loadOrder(true); focusGun("#oGun");
+};
+$("#oEnd").onclick = () => { ORDER=""; OLOG=[]; stopCams(); $("#oWork").classList.add("hide"); $("#oStart").classList.remove("hide"); $("#oRef").value=""; $("#oSearch").classList.add("hide"); focusGun("#oRef"); };
+async function loadOrder(first){
+  const j = await api("order_log",{ref:ORDER}); if (!j.ok) return;
+  OLOG = j.log; renderOrder();
+  const n = OLOG.filter(x=>!x.undone).reduce((a,x)=>a-x.delta,0);
+  if (first && n) msg("#oMsg",`هذا الطلب انخصم له من قبل ${n} حبة — تقدر تكمل.`,"warn");
+}
+function renderOrder(){
+  const live = OLOG.filter(x=>!x.undone);
+  $("#oCount").textContent = live.reduce((a,x)=>a-x.delta,0);
+  $("#oList").innerHTML = OLOG.slice().reverse().map(x=>`<div class="li ${x.undone?"undone":""}" style="cursor:default"><div class="t"><b>${esc(x.ps_items.name)}</b><small>${esc(x.ps_items.option||"")} · ${esc(x.ps_items.code)} · ${esc(fmtDate(x.at))}${x.undone?" · متراجع عنه":""}</small></div><div class="q">${-x.delta}</div>${x.undone?"":`<button class="btn sec sm" data-id="${x.id}">↩</button>`}</div>`).join("") || `<p style="color:var(--mut);font-size:14px;margin:0">امسح أول حبة.</p>`;
+  $("#oList").querySelectorAll("button").forEach(b => b.onclick = async () => { const j=await api("undo",{log_id:+b.dataset.id}); if(!j.ok){ msg("#oMsg",esc(j.message),"bad"); return; } msg("#oMsg","رجّعت الحبة للمستودع.","ok"); await loadOrder(); refreshStats(); });
+}
+async function orderTake(it, force){
+  const j = await api("move",{id:it.id, delta:-1, kind:"order", ref:ORDER, force:!!force});
+  if (!j.ok){
+    beep(false);
+    if (j.code==="short"){ msg("#oMsg",`<b>${esc(it.name)}</b><br>الكمية في النظام ${j.qty} — ما يكفي. لو الحبة فعلاً بيدك فالجرد ناقص.<div class="row" style="margin-top:8px"><button class="btn red sm" id="oForce">اخصمها برضو</button></div>`,"bad"); $("#oForce").onclick = () => orderTake(it, true); return; }
+    msg("#oMsg",esc(j.message),"bad"); return;
+  }
+  beep(true); msg("#oMsg",`✓ ${esc(j.item.name)} — باقي <b class="num">${j.qty}</b>`,"ok");
+  await loadOrder(); refreshStats();
+}
+async function orderScan(raw){
+  raw=String(raw).trim(); if(!raw||!ORDER) return;
+  const r = await lookup(raw);
+  if (r.cancel) return;
+  if (r.miss){ beep(false); msg("#oMsg",`هذا الباركود مو مسجّل: <b class="mono">${esc(raw)}</b><br>اضغط «منتج بدون باركود» وابحث عنه بالاسم.`,"bad"); return; }
+  if (r.item.unlimited){ beep(true); msg("#oMsg",`${esc(r.item.name)} — كميته «غير محدود»، ما ينخصم.`,"warn"); return; }
+  await orderTake(r.item);
+}
+gunInput($("#oGun"), v => orderScan(v));
+$("#oCam").onclick = () => camToggle("#camO", $("#oCam"), orderScan);
+$("#oFind").onclick = () => { $("#oSearch").classList.toggle("hide"); if (!$("#oSearch").classList.contains("hide")) setTimeout(()=>$("#oQ").focus(),60); };
+searchBox("#oQ","#oQList", async it => { if (it.unlimited){ msg("#oMsg","كميته «غير محدود»، ما ينخصم.","warn"); return; } await orderTake(it); $("#oQ").value=""; $("#oQList").innerHTML=""; $("#oSearch").classList.add("hide"); focusGun("#oGun"); });
+
+/* ================= المنتجات ================= */
+let IF = "tracked", IOFF = 0, ITEMS = [];
+document.querySelectorAll("#iChips button").forEach(b => b.onclick = () => { document.querySelectorAll("#iChips button").forEach(x=>x.classList.toggle("on",x===b)); IF=b.dataset.f; loadItems(true); });
+{ let t=null; $("#iQ").oninput = () => { clearTimeout(t); t=setTimeout(()=>loadItems(true),300); }; }
+async function loadItems(reset){
+  if (reset){ IOFF=0; ITEMS=[]; }
+  const big = IF==="nobarcode";
+  const j = await api("list",{q:$("#iQ").value.trim(), filter:IF, offset:IOFF, limit: big?1000:100});
+  if (!j.ok) return;
+  ITEMS = ITEMS.concat(j.items); IOFF += big?1000:100;
+  $("#iTotal").textContent = big ? `${ITEMS.length} منتج` : `${j.total} منتج`;
+  $("#iList").innerHTML = ITEMS.map((it,i)=>`<div class="li" data-i="${i}"><div class="t"><b>${esc(it.name)}</b><small>${esc(it.option?it.option+" · ":"")}${esc(it.code)}${it.counted_at?" · ✓ انجرد":""}</small></div><div class="q ${it.unlimited?"u":it.qty<=0?"z":""}">${it.unlimited?"غير محدود":it.qty}</div></div>`).join("") || `<p style="color:var(--mut)">ما فيه منتجات.</p>`;
+  $("#iMore").classList.toggle("hide", big || IOFF >= j.total);
+  $("#iList").querySelectorAll(".li").forEach(el => el.onclick = () => openItem(ITEMS[+el.dataset.i]));
+}
+$("#iMore").onclick = () => loadItems(false);
+const ACT = {import:"بداية (كمية سلة)",count:"جرد",order:"طلب",adjust:"تعديل",receive:"استلام بضاعة",damage:"تالف",return:"مرتجع",undo:"تراجع",key:"ربط باركود"};
+async function openItem(it){
+  const g = await api("get",{id:it.id}); if (g.ok) it = g.item;
+  const lg = await api("item_log",{id:it.id});
+  $("#dlgBody").innerHTML = `<div class="item">${itemCard(it)}</div>
+   <div class="sys"><span>الكمية الآن</span><b>${it.unlimited?"غير محدود":it.qty}</b></div>
+   ${it.unlimited?"":`<label>حركة يدوية</label><div class="row"><select id="mvK"><option value="receive">استلام بضاعة (+)</option><option value="return">مرتجع من عميل (+)</option><option value="damage">تالف (−)</option><option value="adjust">تعديل (−)</option></select><input id="mvN" type="text" inputmode="numeric" placeholder="العدد" style="flex:.5"></div><input id="mvNote" placeholder="ملاحظة (اختياري)" style="margin-top:8px"><button class="btn w sm" id="mvGo" style="margin-top:8px">سجّل الحركة</button>`}
+   <div class="msg" id="mvMsg"></div>
+   <div class="row" style="margin-top:10px"><button class="btn sec sm" id="mvLabel">🖨 ملصق PDF</button>${it.unlimited?"":`<button class="btn sec sm" id="mvCount">جرد هذا المنتج</button>`}<button class="btn sec sm" id="mvX">إغلاق</button></div>
+   <h2 style="font-size:15px;margin-top:16px">سجل الحركات</h2>
+   <div class="log">${(lg.log||[]).map(l=>`<div style="${l.undone?"opacity:.45":""}"><span>${esc(ACT[l.action]||l.action)}${l.ref?` <span class="mono">#${esc(l.ref)}</span>`:""}${l.note?` · ${esc(l.note)}`:""}<br><small style="color:var(--mut)">${esc(fmtDate(l.at))}</small></span><span style="text-align:left"><span class="d ${l.delta>0?"p":l.delta<0?"m":""}">${l.delta>0?"+":""}${l.delta}</span><br><small class="mono" style="color:var(--mut)">← ${l.qty_after}</small></span></div>`).join("")}</div>`;
+  $("#dlg").showModal();
+  $("#mvX").onclick = () => $("#dlg").close();
+  $("#mvLabel").onclick = () => labelsPdf([{it, n:1}], $("#mvLabel"), "#mvMsg");
+  if (!it.unlimited){
+    $("#mvCount").onclick = () => { $("#dlg").close(); tab("count"); openCount(it, it.qty); };
+    $("#mvGo").onclick = async () => {
+      const n = +toLatin($("#mvN").value); if (!Number.isInteger(n) || n<=0){ msg("#mvMsg","اكتب العدد.","bad"); return; }
+      const k = $("#mvK").value, sign = (k==="receive"||k==="return") ? 1 : -1;
+      const j = await api("move",{id:it.id, delta:sign*n, kind:k, note:$("#mvNote").value});
+      if (!j.ok){ msg("#mvMsg",esc(j.message),"bad"); return; }
+      refreshStats(); loadItems(true); openItem(j.item);
+    };
+  }
+}
+
+/* ================= الملصقات ================= */
+let LP = "0", LITEMS = [];
+document.querySelectorAll("#lChips button").forEach(b => b.onclick = () => { document.querySelectorAll("#lChips button").forEach(x=>x.classList.toggle("on",x===b)); LP=b.dataset.p; loadLabels(); });
+async function loadLabels(){
+  $("#lTable").innerHTML = `<tr><td style="color:var(--mut)">جاري التحميل…</td></tr>`;
+  const j = await api("list",{filter:"nobarcode", limit:1000}); if (!j.ok) return;
+  LITEMS = j.items.filter(it => LP==="1" ? it.label_printed_at : !it.label_printed_at);
+  $("#lTable").innerHTML = LITEMS.map((it,i)=>`<tr><td style="width:28px"><input type="checkbox" data-i="${i}" ${LP==="0"?"checked":""}></td><td><b style="font-weight:600">${esc(it.name)}</b><br><small style="color:var(--mut)">${esc(it.option?it.option+" · ":"")}<span class="mono">${esc(it.code)}</span> · بالمستودع ${it.qty}</small></td><td style="width:70px"><input type="number" min="1" max="500" value="1" data-n="${i}"></td></tr>`).join("") || `<tr><td style="color:var(--mut)">ما فيه منتجات هنا.</td></tr>`;
+}
+$("#lAll").onclick = () => document.querySelectorAll("#lTable input[type=checkbox]").forEach(c=>c.checked=true);
+$("#lNone").onclick = () => document.querySelectorAll("#lTable input[type=checkbox]").forEach(c=>c.checked=false);
+$("#lPrint").onclick = async () => {
+  const sel = [...document.querySelectorAll("#lTable input[type=checkbox]:checked")].map(c => { const i=+c.dataset.i; const n=Math.max(1,Math.min(500,+document.querySelector(`#lTable input[data-n="${i}"]`).value||1)); return {it:LITEMS[i], n}; });
+  if (!sel.length){ msg("#lMsg","اختر منتج واحد على الأقل.","bad"); return; }
+  const ok = await labelsPdf(sel, $("#lPrint"), "#lMsg");
+  if (ok && LP==="0"){ await api("mark_labels",{ids: sel.map(x=>x.it.id)}); setTimeout(loadLabels, 600); }
+};
+
+/* label drawn on canvas (203 dpi thermal, 100×150 mm) */
+const LW = 800, LH = 1200;
+function wrapLines(ctx, text, maxW, maxLines){
+  const words = String(text).split(/\s+/); const lines=[]; let cur="";
+  for (const w of words){ const t = cur ? cur+" "+w : w; if (ctx.measureText(t).width <= maxW) cur = t; else { if (cur) lines.push(cur); cur = w; } }
+  if (cur) lines.push(cur);
+  if (lines.length > maxLines){ const keep = lines.slice(0,maxLines); let last = keep[maxLines-1]; while (ctx.measureText(last+"…").width > maxW && last.length) last = last.slice(0,-1); keep[maxLines-1] = last+"…"; return keep; }
+  return lines;
+}
+function drawLabel(it){
+  const c = document.createElement("canvas"); c.width=LW; c.height=LH; const x = c.getContext("2d");
+  const M=22, R=34;
+  x.fillStyle="#fff"; x.fillRect(0,0,LW,LH);
+  // header band clipped inside the rounded frame
+  x.save(); roundRect(x,M,M,LW-2*M,LH-2*M,R); x.clip(); x.fillStyle="#000"; x.fillRect(M,M,LW-2*M,156); x.restore();
+  x.lineWidth=6; x.strokeStyle="#000"; roundRect(x,M,M,LW-2*M,LH-2*M,R); x.stroke();
+  // brand
+  x.fillStyle="#fff"; x.direction="ltr"; x.textBaseline="alphabetic"; x.textAlign="left";
+  x.font="800 96px 'Barlow Condensed'"; const w1=x.measureText("POST").width, w2=x.measureText("SHINE").width, gap=22, tot=w1+gap+w2+48;
+  const sx = LW/2 - tot/2;
+  x.fillText("POST", sx, 126); x.fillText("SHINE", sx+w1+gap, 126); star(x, sx+w1+gap+w2+30, 66, 22, "#fff");
+  x.fillStyle="#000";
+  // ---- bottom block (fixed): barcode + code + footer
+  const bh=290, bTop=LH-M-500;
+  const bc = document.createElement("canvas");
+  JsBarcode(bc, it.code, {format:"CODE128", displayValue:false, margin:0, width:6, height:bh, background:"#fff", lineColor:"#000"});
+  const bw = Math.min(LW-150, bc.width);
+  x.imageSmoothingEnabled=false; x.drawImage(bc, LW/2-bw/2, bTop, bw, bh);
+  x.direction="ltr"; x.textAlign="center"; x.font="800 88px 'Barlow Condensed'";
+  x.fillText(it.code.replace(/^PS/,"PS-"), LW/2, bTop+bh+92);
+  x.lineWidth=2.5; x.beginPath(); x.moveTo(110, LH-M-82); x.lineTo(LW/2-40, LH-M-82); x.moveTo(LW/2+40, LH-M-82); x.lineTo(LW-110, LH-M-82); x.stroke();
+  star(x, LW/2, LH-M-82, 16, "#000");
+  x.font="600 30px 'IBM Plex Sans Arabic'"; x.direction="rtl"; x.fillText("بوست شاين", LW/2, LH-M-30);
+  // ---- middle block: name, option, sku — centred in the free space
+  const top = M+156+30, bottom = bTop-40, maxW = LW-120;
+  let fs = 58; x.font=`700 ${fs}px 'IBM Plex Sans Arabic'`; x.direction="rtl";
+  let lines = wrapLines(x, it.name, maxW, 4);
+  if (lines.length>=3){ fs=48; x.font=`700 ${fs}px 'IBM Plex Sans Arabic'`; lines = wrapLines(x, it.name, maxW, 4); }
+  const lh = fs*1.34;
+  const optH = it.option ? 86 : 0, skuH = (it.sku && it.sku!==it.code) ? 70 : 0;
+  const blockH = lines.length*lh + optH + skuH;
+  let y = top + Math.max(0,(bottom-top-blockH)/2) + fs;
+  x.textAlign="center";
+  for (const l of lines){ x.fillText(l, LW/2, y); y += lh; }
+  y -= lh - 12;
+  if (it.option){
+    x.font="600 40px 'IBM Plex Sans Arabic'"; const ol = wrapLines(x, it.option, LW-200, 1)[0]; const ow = x.measureText(ol).width+56;
+    roundRect(x, LW/2-ow/2, y+12, ow, 62, 31); x.fill(); x.fillStyle="#fff"; x.fillText(ol, LW/2, y+56); x.fillStyle="#000"; y += optH;
+  }
+  if (skuH){
+    x.direction="ltr"; x.font="700 38px 'Barlow Condensed'"; const t = "SKU  " + it.sku; const tw = x.measureText(t).width+44;
+    x.lineWidth=3; roundRect(x, LW/2-tw/2, y+14, tw, 52, 12); x.stroke(); x.fillText(t, LW/2, y+53);
+  }
+  return c;
+}
+function roundRect(x,a,b,w,h,r){ x.beginPath(); x.moveTo(a+r,b); x.arcTo(a+w,b,a+w,b+h,r); x.arcTo(a+w,b+h,a,b+h,r); x.arcTo(a,b+h,a,b,r); x.arcTo(a,b,a+w,b,r); x.closePath(); }
+function star(x,cx,cy,r,col){ x.save(); x.fillStyle=col; x.beginPath(); for(let i=0;i<8;i++){ const a=i*Math.PI/4 - Math.PI/2, rr = i%2? r*.32 : r; x.lineTo(cx+rr*Math.cos(a), cy+rr*Math.sin(a)); } x.closePath(); x.fill(); x.restore(); }
+async function labelsPdf(sel, btn, msgSel){
+  btn.disabled = true; const old = btn.textContent; btn.textContent = "جاري التجهيز…";
+  try {
+    await Promise.all([loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"), loadScript("https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js")]);
+    await Promise.all([document.fonts.load("700 56px 'IBM Plex Sans Arabic'"), document.fonts.load("600 40px 'IBM Plex Sans Arabic'"), document.fonts.load("500 28px 'IBM Plex Sans Arabic'"), document.fonts.load("800 84px 'Barlow Condensed'"), document.fonts.load("700 38px 'Barlow Condensed'")]);
+    const pdf = new jspdf.jsPDF({unit:"mm", format:[100,150], orientation:"portrait", compress:true});
+    let pages = 0;
+    for (const {it, n} of sel){
+      const img = drawLabel(it).toDataURL("image/png");
+      for (let k=0;k<n;k++){ if (pages) pdf.addPage([100,150],"portrait"); pdf.addImage(img, "PNG", 0, 0, 100, 150, "L"+it.id, "FAST"); pages++; }
+    }
+    const d = new Date(); const name = `ملصقات-بوست-شاين-${d.getDate()}-${d.getMonth()+1}-${pages}.pdf`;
+    pdf.save(name);
+    msg(msgSel, `✓ نزل الملف (${pages} ملصق).`, "ok"); return true;
+  } catch(e){ msg(msgSel, esc(e.message||"صار خطأ."), "bad"); return false; }
+  finally { btn.disabled=false; btn.textContent=old; }
+}
+
+/* ================= المزامنة ================= */
+const SYNC_PROMPT = `مرفق ملف «مزامنة-بوست-شاين» من نظام المستودع. فيه ورقتين:
+• «الكميات»: الكمية الفعلية على الرف لكل منتج (عمود الكمية بالمستودع) مع رقم المنتج ورقم الخيار في سلة.
+• «طلبات انخصمت»: أرقام الطلبات اللي انخصمت حباتها من الرف فعلاً.
+
+المطلوب في متجري بسلة:
+1) اسحب الطلبات اللي حالتها مازالت قبل الشحن (جديد / بانتظار المراجعة / جاري المراجعة / جاري التجهيز / قيد التنفيذ) واستبعد منها أي طلب موجود في ورقة «طلبات انخصمت».
+2) لكل منتج في الملف: الكمية الصحيحة في سلة = الكمية بالمستودع − عدد حباته في الطلبات اللي طلعت في الخطوة 1 (ولا تنزل تحت صفر).
+3) اعرض لي جدول بالمنتجات اللي كميتها في سلة تختلف عن الكمية الصحيحة: الاسم | الخيار | كمية سلة الآن | الكمية الصحيحة | الفرق. لا تحدّث شي قبل ما أوافق.
+4) بعد موافقتي حدّث الكميات في سلة (للخيارات حدّث الخيار نفسه)، وأكد لي العدد اللي تحدّث بالضبط.
+لا تلمس المنتجات اللي كميتها «غير محدود».`;
+$("#yCopy").onclick = async () => { try { await navigator.clipboard.writeText(SYNC_PROMPT); msg("#yMsg","✓ انسخ الطلب.","ok"); } catch(e){ msg("#yMsg","ما قدرت أنسخ — حدّد النص وانسخه يدوي.","warn"); } };
+$("#yFile").onclick = async () => {
+  const b=$("#yFile"); b.disabled=true;
+  try {
+    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js");
+    const j = await api("export"); if (!j.ok) throw new Error(j.message||"تعذر سحب البيانات");
+    const rows = j.items.map(x=>({"رقم المنتج":x.product_id, "رقم الخيار":x.variant_id||"", "اسم المنتج":x.name, "الخيار":x.option||"", "SKU":x.sku||"", "الكمية بالمستودع":x.qty, "آخر جرد":x.counted_at?fmtDate(x.counted_at):"ما انجرد"}));
+    const ord = Object.entries(j.deducted_orders).map(([ref,o])=>({"رقم الطلب":ref, "وقت الخصم":fmtDate(o.at), "عدد الحبات":o.items.reduce((a,i)=>a+i.qty,0)}));
+    const wb = XLSX.utils.book_new();
+    const s1 = XLSX.utils.json_to_sheet(rows); s1["!cols"]=[{wch:13},{wch:13},{wch:60},{wch:22},{wch:16},{wch:15},{wch:16}];
+    const s2 = XLSX.utils.json_to_sheet(ord.length?ord:[{"رقم الطلب":"","وقت الخصم":"","عدد الحبات":""}]); s2["!cols"]=[{wch:14},{wch:18},{wch:12}];
+    wb.Workbook = {Views:[{RTL:true}]};
+    XLSX.utils.book_append_sheet(wb, s1, "الكميات"); XLSX.utils.book_append_sheet(wb, s2, "طلبات انخصمت");
+    const d=new Date(); XLSX.writeFile(wb, `مزامنة-بوست-شاين-${d.getDate()}-${d.getMonth()+1}.xlsx`);
+    msg("#yMsg",`✓ نزل الملف — ${rows.length} منتج، ${ord.length} طلب منخصم.`,"ok");
+  } catch(e){ msg("#yMsg",esc(e.message),"bad"); }
+  b.disabled=false;
+};
+$("#yDone").onclick = async () => {
+  if (!confirm("أكيد Claude بوست شاين خلّص تحديث الكميات في سلة؟")) return;
+  const j = await api("mark_synced"); if (!j.ok){ msg("#yMsg",esc(j.message),"bad"); return; }
+  msg("#yMsg",`✓ سجلت المزامنة (${j.n} منتج).`,"ok"); refreshStats();
+};
+</script>
+</body>
+</html>
