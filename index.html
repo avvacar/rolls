@@ -890,7 +890,7 @@ const MICRO = n => `<div class="micro">${Array(n*3).fill("AVVA CAR ◆ GENUINE �
 const ROLL_SPECS = { "5201": { type:"Gloss Clear", ar:"شفاف لامع", material:"LUBRIZOL", glue:"ASHLAND", thickness:"8.5 mil", size:"1.52M × 15M" } };
 const isBlack = r => /أسود|اسود|black/i.test(String((r && r.film) || ""));
 // colour rolls: film "COLOR C008 · 18M" → same layout as the clear/black labels
-const colorSpec = r => { const m = /^COLOR\s+(\S+)\s*·\s*(\d+)\s*M/i.exec(String((r && r.film) || "")); return m ? { type:"Color "+m[1], ar:"ملون · "+m[1], material:"LUBRIZOL", glue:"ASHLAND", thickness:"7.5 mil", size:`1.52M × ${m[2]}M` } : null; };
+const colorSpec = r => { const f = String((r && r.film) || ""), m = /^COLOR\s+(\S+)\s*·\s*(\d+)\s*M/i.exec(f); if (!m) return null; const nm = (f.split(" · ")[2] || "").trim(); return { type:"Color "+m[1], ar: nm || ("ملون · "+m[1]), material:"LUBRIZOL", glue:"ASHLAND", thickness:"7.5 mil", size:`1.52M × ${m[2]}M` }; };
 function specOf(r){ const cs = colorSpec(r); if (cs) return cs; const base = ROLL_SPECS[r && r.product_code] || { type: (r && r.film) || "PPF" }; if (isBlack(r)) return Object.assign({}, base, { type:"Gloss Black", ar:"أسود لامع", thickness:"7.5 mil" }); return /مطفي|matte/i.test(String((r && r.film) || "")) ? Object.assign({}, base, { type:"Matte Clear", ar:"شفاف مطفي", thickness:"7.5 mil" }) : base; }
 async function labelsHtml(rows, ph){
   const bcs = {}; for (const r of rows) bcs[r.carton_no] = ph ? '<div id="phBc" style="width:84mm;height:13mm"></div>' : await barcodeSvg(r.carton_no);
@@ -966,6 +966,7 @@ async function saveLabelsPdf(rows){
 
 // Fast PDF: the shared design is rendered once per product as one image (embedded once),
 // then each roll's number, Code128 bars and QR modules are drawn as vectors on top.
+const tplKey = r => { const sp = specOf(r); return (r.product_code || "_") + "|" + [sp.type, sp.ar, sp.thickness, sp.size].join("|"); };
 async function fastLabelsPdf(rows){
   if (!rows.length) { msg("#printMsg","حدد ملصق واحد على الأقل من القائمة تحت (حط عليه صح ✓).","bad"); return; }
   $("#pdfBtn").disabled = true;
@@ -973,7 +974,7 @@ async function fastLabelsPdf(rows){
     msg("#printMsg","جاري تجهيز ملف PDF...","warn");
     await Promise.all([loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"), loadScript("https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js")]);
     const H2C = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
-    const groups = {}; rows.forEach(r => { const k = (r.product_code || "_") + "|" + (isBlack(r) ? "black" : "clear"); (groups[k] = groups[k] || []).push(r); });
+    const groups = {}; rows.forEach(r => { const k = tplKey(r); (groups[k] = groups[k] || []).push(r); });
     const tpl = {};
     for (const key of Object.keys(groups)) {
       const html = (await labelsHtml([groups[key][0]], true)).replace(/<script>setTimeout\(\(\)=>print\(\),400\)<\/script>/,"").replace('<div class="hint">','<div class="hint" style="display:none">').replace("</head>",'<script src="'+H2C+'"><\/script></head>');
@@ -985,14 +986,14 @@ async function fastLabelsPdf(rows){
       const d = fr.contentDocument, lab = d.querySelector(".lab"), L = lab.getBoundingClientRect(), mm = 100 / L.width;
       const box = id => { const b = d.getElementById(id).getBoundingClientRect(); return { x:(b.left-L.left)*mm, y:(b.top-L.top)*mm, w:b.width*mm, h:b.height*mm }; };
       const c = await fr.contentWindow.html2canvas(lab, { scale: 3, backgroundColor: "#ffffff" });
-      tpl[key] = { img: c.toDataURL("image/jpeg", 0.92), num: box("phNum"), bc: box("phBc"), qr: box("phQr"), logo: box("phLogo") };
+      tpl[key] = { alias: Object.keys(tpl).length + "", img: c.toDataURL("image/jpeg", 0.92), num: box("phNum"), bc: box("phBc"), qr: box("phQr"), logo: box("phLogo") };
       fr.remove();
     }
     const pdf = new jspdf.jsPDF({ unit:"mm", format:[100,150], orientation:"portrait", compress:true });
     rows.forEach((r, i) => {
-      const T = tpl[(r.product_code || "_") + "|" + (isBlack(r) ? "black" : "clear")];
+      const T = tpl[tplKey(r)];
       if (i) pdf.addPage([100,150], "portrait");
-      pdf.addImage(T.img, "JPEG", 0, 0, 100, 150, "tpl_" + (r.product_code || "_") + (isBlack(r) ? "_b" : "_c"), "FAST");
+      pdf.addImage(T.img, "JPEG", 0, 0, 100, 150, "tpl_" + T.alias, "FAST");
       pdf.setFillColor(0,0,0);
       // roll number
       pdf.setFont("courier", "bold"); let fs = 22; pdf.setFontSize(fs);

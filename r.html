@@ -222,7 +222,7 @@ function render(r){
   const parts = /^AVVA-(\d+)\.(\d+)-(\d+)$/.exec(r.carton_no || "") || [];
   const sp0 = SPECS[parts[1]] || { type: r.film || "PPF", ar: r.film || "" };
   const cm = /^COLOR\s+(\S+)\s*·\s*(\d+)\s*M/i.exec(String(r.film || ""));
-  const sp = cm ? { type: "Color " + cm[1], ar: "ملون · " + cm[1], material: "LUBRIZOL", glue: "ASHLAND", thickness: "7.5 mil", size: "1.52 × " + cm[2] + " m" } : /أسود|اسود|black/i.test(String(r.film || "")) ? Object.assign({}, sp0, { type: "Gloss Black", ar: "أسود لامع", thickness: "7.5 mil" }) : sp0;
+  const sp = cm ? { type: "Color " + cm[1], ar: (String(r.film || "").split(" · ")[2] || "").trim() || ("ملون · " + cm[1]), material: "LUBRIZOL", glue: "ASHLAND", thickness: "7.5 mil", size: "1.52 × " + cm[2] + " m" } : /أسود|اسود|black/i.test(String(r.film || "")) ? Object.assign({}, sp0, { type: "Gloss Black", ar: "أسود لامع", thickness: "7.5 mil" }) : sp0;
   const bd = batchDate(parts[2]), voided = r.status === "void";
   const now = new Date(), stamp = now.toLocaleDateString("en-GB") + " · " + now.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
   const status = voided ? ["bad","غير مشمول بالضمان"] : r.warranty_registered ? ["","الضمان مفعّل"] : r.sold ? ["warn","مُباع عبر المتجر الرسمي"] : ["warn","موثّق في مستودع AVVA CAR"];
