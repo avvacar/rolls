@@ -446,7 +446,7 @@ async function saveRoll(){
   if (!j.ok) { beep(false); msg("#addMsg", j.message, "bad"); return; }
   store.set("avva_rolls_prefix", p.prefix);
   if (j.duplicate) { beep(false); msg("#addMsg", `هذا الرول مسجّل من قبل (${j.roll.code}) — حالته: ${ST[j.roll.status]}`, "warn"); }
-  else { beep(true); msg("#addMsg", `تم ✓ ${j.roll.carton_no} ← ${j.roll.code}`, "ok");
+  else { beep(true); msg("#addMsg", j.renumbered ? `تم ✓ رقم المصنع ${j.factory_no} ← رقمنا الجديد ${j.roll.carton_no}. اطبع ملصقه من تبويب الطباعة والصقه على الكرتون فوق ملصق المصنع.` : `تم ✓ ${j.roll.carton_no} ← ${j.roll.code}`, "ok");
     recent.unshift(j.roll); SESS++; $("#sbSess").textContent = SESS; refreshBar(); $("#recent").innerHTML = recent.slice(0,15).map(r=>`<div><span class="mono">${esc(r.carton_no)}</span><b class="mono">${esc(r.code)}</b></div>`).join(""); }
   $("#carton").value=""; $("#seq").value=""; $("#inner").value=""; msg("#ocrMsg","","");
   if (streams["camIn"]) $("#camIn").scrollIntoView({behavior:"smooth",block:"center"}); else $("#seq").focus();
